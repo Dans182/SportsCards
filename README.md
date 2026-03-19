@@ -1,65 +1,41 @@
-# SportsCards 🏈⚾🏀
+# SportsCards
 
-A modern web application designed for sports card collectors to organize, manage, and showcase their valuable card collections. Whether you're a casual collector or a serious enthusiast, SportsCards provides an intuitive platform to catalog your sports memorabilia with beautiful, responsive design.
+Aplicación web para registrar y consultar cartas deportivas, con foco en colecciones personales de béisbol.
 
-## 🌐 **Live Demo**
+## Qué cambié en esta versión
 
-**[Visit SportsCards →](https://sportscards-5b469.web.app)**
+- **Arquitectura refactorizada:** la capa de acceso a datos ahora está separada en `src/services/cardService.js` y el estado de colección en `src/hooks/useCards.js`.
+- **Persistencia confirmada:** el proyecto **ya usa base de datos**, concretamente **Firebase Firestore**, por lo que no era necesario migrar desde `localStorage` a SQLite.
+- **Mejora de seguridad:** se eliminó la dependencia funcional de ImgBB y la subida con clave embebida en componentes; las imágenes ahora se comprimen en el navegador y se guardan inline en Firestore.
+- **UI/UX modernizada:** nuevo dashboard responsive, métricas principales, layout de trabajo más claro y modales/rediseño visual.
+- **OCR open source:** se integró un flujo de OCR asistido con **Tesseract.js** cargado dinámicamente desde CDN para sugerir campos al escanear una carta.
 
-_Experience the app in action with our live demo!_
+## Stack actual
 
-## What is SportsCards?
+- React 19
+- Firebase Auth
+- Firebase Firestore
+- Tailwind CSS
+- OCR con Tesseract.js (cliente)
 
-SportsCards is a comprehensive digital solution for sports card enthusiasts who want to:
+## Flujo de OCR
 
-- **Organize their collections** by team, player, year, and set
-- **Track card details** including condition, value, and personal notes
-- **Manage their inventory** with an easy-to-use interface
-- **Showcase their prized cards** with high-quality image uploads
-- **Access their collection** from anywhere with cloud storage
+1. Sube una imagen frontal de la carta.
+2. La app comprime la imagen en el navegador.
+3. Pulsa **Run OCR assist**.
+4. Tesseract.js extrae texto y propone año, fabricante, set, número y datos de grading cuando es posible.
+5. Revisa los campos y guarda la carta.
 
-## Key Features
+> Nota: la carga inicial del OCR depende de descargar el runtime/modelo desde CDN en el navegador.
 
-### 🎯 **Smart Card Management**
+## Variables de entorno opcionales
 
-- Add new cards with comprehensive details (player, team, year, manufacturer, set)
-- Edit existing card information easily
-- Bulk operations for efficient collection management
-- Advanced search and filtering capabilities
+Puedes sobrescribir la configuración pública de Firebase con variables `REACT_APP_FIREBASE_*` estándar de Create React App.
 
-### 🔐 **Secure User Experience**
+## Scripts
 
-- User authentication and profile management
-- Private collections with secure data storage
-- Cloud-based backup ensuring your collection is never lost
-
-### 📱 **Modern, Responsive Design**
-
-- Beautiful, intuitive interface built with Tailwind CSS
-- Works seamlessly on desktop, tablet, and mobile devices
-- Clean, professional appearance that showcases your cards beautifully
-
-### 🚀 **Built for Performance**
-
-- Fast, responsive application using React 19
-- Real-time updates with Firebase integration
-- Optimized for smooth user experience
-
-## Who is this for?
-
-- **Sports Card Collectors** - Organize and track your growing collection
-- **Dealers and Shops** - Manage inventory and client collections
-- **Hobby Enthusiasts** - Document and showcase your prized possessions
-- **Anyone passionate about sports memorabilia** - Start your digital collection today
-
-## Technology Highlights
-
-Built with modern web technologies including React, Tailwind CSS, and Firebase, ensuring a reliable, scalable, and maintainable application that grows with your collection.
-
-## Project Status
-
-This project is actively developed and maintained, with regular updates and improvements based on user feedback and community needs.
-
----
-
-_SportsCards - Where passion meets organization_ 🏆
+```bash
+npm start
+npm test -- --watchAll=false
+npm run build
+```
