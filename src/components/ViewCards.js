@@ -2,7 +2,17 @@ import React, { useMemo, useState } from 'react';
 import CardDetailModal from './CardDetailModal';
 import ConfirmModal from './ConfirmModal';
 
-function ViewCards({ cards, loading, error, onDelete }) {
+function ViewCards({
+  cards,
+  loading,
+  error,
+  onDelete,
+  readOnly = false,
+  title = 'Your catalog',
+  subtitle = 'Search, review and clean up your baseball card inventory.',
+  emptyTitle = 'No cards match this filter',
+  emptyMessage = 'Try broadening your search or add your first baseball card in the intake panel.'
+}) {
   const [query, setQuery] = useState('');
   const [sport, setSport] = useState('All');
   const [gradedOnly, setGradedOnly] = useState(false);
@@ -63,9 +73,9 @@ function ViewCards({ cards, loading, error, onDelete }) {
     <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/70 sm:p-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-sky-600">Collection</p>
-          <h2 className="mt-2 text-2xl font-semibold text-slate-900">Your catalog</h2>
-          <p className="mt-2 text-sm text-slate-500">Search, review and clean up your baseball card inventory.</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-sky-600">{readOnly ? 'Showcase' : 'Collection'}</p>
+          <h2 className="mt-2 text-2xl font-semibold text-slate-900">{title}</h2>
+          <p className="mt-2 text-sm text-slate-500">{subtitle}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
           {filteredCards.length} visible card{filteredCards.length === 1 ? '' : 's'}
@@ -124,36 +134,40 @@ function ViewCards({ cards, loading, error, onDelete }) {
               </button>
               <div className="flex gap-3 border-t border-slate-200 bg-white p-4">
                 <button type="button" onClick={() => setSelectedCard(card)} className="flex-1 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">View</button>
-                <button type="button" onClick={() => setCardToDelete(card)} className="flex-1 rounded-2xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700">Delete</button>
+                {!readOnly ? (
+                  <button type="button" onClick={() => setCardToDelete(card)} className="flex-1 rounded-2xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700">Delete</button>
+                ) : null}
               </div>
             </article>
           ))}
         </div>
       ) : (
         <div className="mt-8 rounded-[1.75rem] border border-dashed border-slate-300 bg-slate-50 p-10 text-center">
-          <h3 className="text-lg font-semibold text-slate-900">No cards match this filter</h3>
-          <p className="mt-2 text-sm text-slate-500">Try broadening your search or add your first baseball card in the intake panel.</p>
+          <h3 className="text-lg font-semibold text-slate-900">{emptyTitle}</h3>
+          <p className="mt-2 text-sm text-slate-500">{emptyMessage}</p>
         </div>
       )}
 
       <CardDetailModal isOpen={Boolean(selectedCard)} card={selectedCard} onClose={() => setSelectedCard(null)} />
-      <ConfirmModal
-        isOpen={Boolean(cardToDelete)}
-        title="Delete card"
-        message={cardToDelete ? `Remove ${cardToDelete.player} from your collection?` : ''}
-        confirmText="Delete"
-        cancelText="Keep"
-        onClose={() => setCardToDelete(null)}
-        onConfirm={async () => {
-          if (cardToDelete) {
-            await onDelete(cardToDelete.id);
-            setCardToDelete(null);
-            if (selectedCard?.id === cardToDelete.id) {
-              setSelectedCard(null);
+      {!readOnly ? (
+        <ConfirmModal
+          isOpen={Boolean(cardToDelete)}
+          title="Delete card"
+          message={cardToDelete ? `Remove ${cardToDelete.player} from your collection?` : ''}
+          confirmText="Delete"
+          cancelText="Keep"
+          onClose={() => setCardToDelete(null)}
+          onConfirm={async () => {
+            if (cardToDelete) {
+              await onDelete(cardToDelete.id);
+              setCardToDelete(null);
+              if (selectedCard?.id === cardToDelete.id) {
+                setSelectedCard(null);
+              }
             }
-          }
-        }}
-      />
+          }}
+        />
+      ) : null}
     </section>
   );
 }

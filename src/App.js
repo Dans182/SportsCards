@@ -1,20 +1,23 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
 import AddCard from './components/AddCard';
 import Login from './components/Login';
 import ProfileSettings from './components/ProfileSettings';
+import PublicProfilePage from './components/PublicProfilePage';
 import ViewCards from './components/ViewCards';
 import StatCard from './components/ui/StatCard';
 import useCards from './hooks/useCards';
-import { auth, db } from './firebase';
+import { auth } from './firebase';
+import { fetchUserProfile } from './services/profileService';
+import { getPublicProfileSlugFromPath } from './utils/publicProfile';
 import './App.css';
 
 function App() {
   const [user, setUser] = useState(null);
-  const [userName, setUserName] = useState('');
+  const [profile, setProfile] = useState(null);
   const [booting, setBooting] = useState(true);
   const [showProfileSettings, setShowProfileSettings] = useState(false);
+  const publicProfileSlug = useMemo(() => getPublicProfileSlugFromPath(window.location.pathname), []);
   const {
     cards = [],
     loading = true,
@@ -25,27 +28,46 @@ function App() {
   } = useCards(user) || {};
 
   useEffect(() => {
+    if (publicProfileSlug) {
+      setBooting(false);
+      return undefined;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
 
       if (!currentUser) {
-        setUserName('');
+        setProfile(null);
         setBooting(false);
         return;
       }
 
       try {
-        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-        setUserName(userDoc.exists() ? userDoc.data().name || currentUser.email : currentUser.email);
+        const userProfile = await fetchUserProfile(currentUser.uid);
+        setProfile(userProfile || {
+          id: currentUser.uid,
+          name: currentUser.email || 'Collector',
+          email: currentUser.email || '',
+          publicProfileEnabled: false,
+          publicSlug: '',
+          shareDescription: ''
+        });
       } catch (errorFetch) {
-        setUserName(currentUser.email || 'Collector');
+        setProfile({
+          id: currentUser.uid,
+          name: currentUser.email || 'Collector',
+          email: currentUser.email || '',
+          publicProfileEnabled: false,
+          publicSlug: '',
+          shareDescription: ''
+        });
       } finally {
         setBooting(false);
       }
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [publicProfileSlug]);
 
   const statItems = useMemo(() => ([
     { label: 'Total cards', value: stats.total, helper: 'Entire collection', accent: 'bg-slate-950' },
@@ -54,6 +76,10 @@ function App() {
     { label: 'Graded cards', value: stats.graded, helper: 'Slabbed / graded inventory', accent: 'bg-violet-600' },
     { label: 'Newest year', value: stats.recentYear, helper: 'Most recent release in collection', accent: 'bg-amber-500' }
   ]), [stats]);
+
+  if (publicProfileSlug) {
+    return <PublicProfilePage slug={publicProfileSlug} />;
+  }
 
   if (booting) {
     return (
@@ -78,7 +104,7 @@ function App() {
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-600">SportsCards</p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Baseball card inventory dashboard</h1>
             <p className="mt-3 max-w-2xl text-sm text-slate-500 sm:text-base">
-              Welcome back, <span className="font-semibold text-slate-800">{userName || 'Collector'}</span>. Your collection is stored in Firestore and now includes secure inline images plus OCR-assisted card entry.
+              Welcome back, <span className="font-semibold text-slate-800">{profile?.name || 'Collector'}</span>. Your collection is stored in Firestore and now includes secure inline images plus OCR-assisted card entry.
             </p>
           </div>
 
@@ -106,9 +132,8 @@ function App() {
       <ProfileSettings
         isOpen={showProfileSettings}
         onClose={() => setShowProfileSettings(false)}
-        userName={userName}
-        userEmail={user.email}
-        onNameUpdate={setUserName}
+        profile={profile}
+        onProfileUpdate={setProfile}
       />
     </div>
   );

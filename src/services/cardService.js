@@ -1,7 +1,11 @@
-import { collection, addDoc, deleteDoc, doc, getDocs, query, updateDoc, where } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDocs, query, updateDoc, where } from 'firebase/firestore';
 import { db } from '../firebase';
 
 const cardsCollection = collection(db, 'cards');
+
+const getCardTimestamp = (card) => card.updatedAt?.seconds || card.createdAt?.seconds || 0;
+
+const sortCardsByRecentUpdate = (cards) => cards.sort((a, b) => getCardTimestamp(b) - getCardTimestamp(a));
 
 const normalizeCardPayload = (card, userId) => ({
   player: card.player?.trim() || '',
@@ -24,13 +28,7 @@ export async function fetchCardsByUser(userId) {
   const q = query(cardsCollection, where('userId', '==', userId));
   const snapshot = await getDocs(q);
 
-  return snapshot.docs
-    .map((entry) => ({ id: entry.id, ...entry.data() }))
-    .sort((a, b) => {
-      const aTime = a.updatedAt?.seconds || a.createdAt?.seconds || 0;
-      const bTime = b.updatedAt?.seconds || b.createdAt?.seconds || 0;
-      return bTime - aTime;
-    });
+  return sortCardsByRecentUpdate(snapshot.docs.map((entry) => ({ id: entry.id, ...entry.data() })));
 }
 
 export async function createCard(userId, card) {

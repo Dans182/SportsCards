@@ -1,5 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import Login from './components/Login';
+import {
+  buildPublicProfilePath,
+  createProfileSlug,
+  getPublicProfileSlugFromPath,
+  slugifyProfileName
+} from './utils/publicProfile';
 
 jest.mock('./firebase', () => ({
   __esModule: true,
@@ -23,4 +29,12 @@ test('renders login CTA copy', () => {
   render(<Login />);
   expect(screen.getByText(/A faster, cleaner workflow/i)).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
+});
+
+test('normalizes public profile slugs and paths', () => {
+  expect(slugifyProfileName('  Álvaro Rookie PC  ')).toBe('alvaro-rookie-pc');
+  expect(createProfileSlug('')).toBe('collector');
+  expect(buildPublicProfilePath('juan-cards')).toBe('/collection/juan-cards');
+  expect(getPublicProfileSlugFromPath('/collection/juan-cards')).toBe('juan-cards');
+  expect(getPublicProfileSlugFromPath('/dashboard')).toBeNull();
 });

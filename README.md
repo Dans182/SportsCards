@@ -2,13 +2,14 @@
 
 Aplicación web para registrar y consultar cartas deportivas, con foco en colecciones personales de béisbol.
 
-## Qué cambié en esta versión
+## Qué incluye actualmente
 
-- **Arquitectura refactorizada:** la capa de acceso a datos ahora está separada en `src/services/cardService.js` y el estado de colección en `src/hooks/useCards.js`.
-- **Persistencia confirmada:** el proyecto **ya usa base de datos**, concretamente **Firebase Firestore**, por lo que no era necesario migrar desde `localStorage` a SQLite.
-- **Mejora de seguridad:** se eliminó la dependencia funcional de ImgBB y la subida con clave embebida en componentes; las imágenes ahora se comprimen en el navegador y se guardan inline en Firestore.
-- **UI/UX modernizada:** nuevo dashboard responsive, métricas principales, layout de trabajo más claro y modales/rediseño visual.
-- **OCR open source:** se integró un flujo de OCR asistido con **Tesseract.js** cargado dinámicamente desde CDN para sugerir campos al escanear una carta.
+- **Arquitectura refactorizada:** la capa de acceso a datos está separada en `src/services/cardService.js` y `src/services/profileService.js`, mientras que el estado de la colección vive en `src/hooks/useCards.js`.
+- **Persistencia en Firebase:** el proyecto usa **Firebase Firestore** como base de datos, por lo que no fue necesario introducir SQLite.
+- **Mejora de seguridad:** se eliminó la dependencia funcional de ImgBB y la antigua subida con clave embebida; las imágenes se comprimen en el navegador y se guardan inline en Firestore.
+- **UI/UX modernizada:** dashboard responsive, métricas principales, layout de trabajo más claro y ajustes de perfil integrados.
+- **OCR open source:** flujo asistido con **Tesseract.js** cargado dinámicamente desde CDN para sugerir campos al escanear una carta.
+- **Perfil público compartible:** cada usuario puede activar un enlace público de solo lectura (`/collection/:slug`) para enseñar su colección sin requerir login al visitante.
 
 ## Stack actual
 
@@ -17,6 +18,19 @@ Aplicación web para registrar y consultar cartas deportivas, con foco en colecc
 - Firebase Firestore
 - Tailwind CSS
 - OCR con Tesseract.js (cliente)
+
+## Perfil público
+
+1. Abre **Profile settings**.
+2. Activa **Share publicly**.
+3. Define un slug público y una breve descripción opcional.
+4. Guarda y comparte el enlace generado.
+
+### Alcance actual
+
+- El perfil público muestra las cartas guardadas por el usuario en modo **solo lectura**.
+- El visitante **no necesita crear una cuenta** para navegar la colección compartida.
+- Si más adelante quieres enseñar también “las que te faltan”, habría que modelar además una wishlist/checklist separada.
 
 ## Flujo de OCR
 
