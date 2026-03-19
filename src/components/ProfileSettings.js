@@ -1,142 +1,96 @@
-import React, { useState, useEffect } from 'react';
-import { auth, db } from '../firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
 import { signOut } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase';
 
-function ProfileSettings({ isOpen, onClose, userName, onNameUpdate }) {
-  const [newName, setNewName] = useState('');
-  const [loading, setLoading] = useState(false);
+function ProfileSettings({ isOpen, onClose, userName, userEmail, onNameUpdate }) {
+  const [newName, setNewName] = useState(userName || '');
   const [message, setMessage] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setNewName(userName);
+    setNewName(userName || '');
   }, [userName]);
 
-  const handleUpdateName = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  if (!isOpen) {
+    return null;
+  }
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setSaving(true);
     setMessage('');
 
     try {
       const user = auth.currentUser;
-      if (user) {
-        // Use setDoc instead of updateDoc to create document if it doesn't exist
-        await setDoc(doc(db, 'users', user.uid), {
-          name: newName,
-          email: user.email,
-          updatedAt: new Date()
-        }, { merge: true }); // merge: true will update existing fields without overwriting
-        
-        setMessage('Name updated successfully!');
-        onNameUpdate(newName);
-        
-        // Clear message after 3 seconds
-        setTimeout(() => {
-          setMessage('');
-        }, 3000);
-      }
+      await setDoc(doc(db, 'users', user.uid), {
+        name: newName.trim(),
+        email: user.email,
+        updatedAt: new Date()
+      }, { merge: true });
+      onNameUpdate(newName.trim());
+      setMessage('Profile updated successfully.');
     } catch (error) {
-      setMessage('Error updating name: ' + error.message);
+      setMessage(error.message || 'Unable to update your profile.');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
   const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      onClose();
-    } catch (error) {
-      setMessage('Error signing out: ' + error.message);
-    }
+    await signOut(auth);
+    onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Profile Settings</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition duration-200"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-xl rounded-[2rem] border border-slate-200 bg-white p-6 shadow-2xl sm:p-8">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-sky-600">Profile</p>
+            <h2 className="mt-2 text-2xl font-semibold text-slate-900">Collector preferences</h2>
+            <p className="mt-2 text-sm text-slate-500">Update the name shown across your dashboard and manage your session.</p>
+          </div>
+          <button type="button" onClick={onClose} className="rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-500 transition hover:border-slate-300 hover:text-slate-900">
+            Close
           </button>
         </div>
 
-        <form onSubmit={handleUpdateName} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Current Name
-            </label>
-            <p className="text-gray-600 mb-4">{userName}</p>
-          </div>
+        <div className="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Signed in as</p>
+          <p className="mt-2 text-sm font-medium text-slate-900">{userEmail}</p>
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              New Name
-            </label>
+        <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+          <label className="block">
+            <span className="mb-2 block text-sm font-medium text-slate-700">Display name</span>
             <input
-              type="text"
               value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-              placeholder="Enter your new name"
+              onChange={(event) => setNewName(event.target.value)}
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
+              placeholder="Your collector name"
               required
             />
-          </div>
+          </label>
 
-          {message && (
-            <div className={`p-3 rounded-lg text-sm ${
-              message.includes('Error') 
-                ? 'bg-red-100 text-red-700' 
-                : 'bg-green-100 text-green-700'
-            }`}>
+          {message ? (
+            <div className={`rounded-2xl px-4 py-3 text-sm ${message.toLowerCase().includes('unable') ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'}`}>
               {message}
             </div>
-          )}
+          ) : null}
 
-          <div className="flex space-x-4">
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-3 px-4 rounded-lg transition duration-200"
-            >
-              {loading ? 'Updating...' : 'Update Name'}
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <button type="submit" disabled={saving} className="inline-flex flex-1 items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:bg-slate-400">
+              {saving ? 'Saving...' : 'Save changes'}
             </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-3 px-4 rounded-lg transition duration-200"
-            >
-              Cancel
+            <button type="button" onClick={handleLogout} className="inline-flex flex-1 items-center justify-center rounded-2xl bg-rose-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-rose-700">
+              Sign out
             </button>
           </div>
         </form>
-
-        {/* Divider */}
-        <div className="my-6 border-t border-gray-200"></div>
-
-        {/* Logout Section */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium text-gray-900">Account</h3>
-          <button
-            onClick={handleLogout}
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center space-x-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            <span>Sign Out</span>
-          </button>
-        </div>
       </div>
     </div>
   );
 }
 
-export default ProfileSettings; 
+export default ProfileSettings;
