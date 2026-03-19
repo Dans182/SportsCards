@@ -1,34 +1,32 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
+import { initializeApp } from 'firebase/app';
+import { getAnalytics, isSupported as isAnalyticsSupported } from 'firebase/analytics';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyB2sP0FNaZmrz68_acOvFkb6H22UxAT4Xc",
-  authDomain: "sportscards-5b469.firebaseapp.com",
-  projectId: "sportscards-5b469",
-  storageBucket: "sportscards-5b469.firebasestorage.app",
-  messagingSenderId: "821627721273",
-  appId: "1:821627721273:web:f99a665fd0ca95eb7cdfe8",
-  measurementId: "G-DVH4JCJJ99"
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || 'AIzaSyB2sP0FNaZmrz68_acOvFkb6H22UxAT4Xc',
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || 'sportscards-5b469.firebaseapp.com',
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || 'sportscards-5b469',
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || 'sportscards-5b469.firebasestorage.app',
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || '821627721273',
+  appId: process.env.REACT_APP_FIREBASE_APP_ID || '1:821627721273:web:f99a665fd0ca95eb7cdfe8',
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID || 'G-DVH4JCJJ99'
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
 
-// Initialize Firebase Authentication and get a reference to the service
+if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
+  isAnalyticsSupported()
+    .then((supported) => {
+      if (supported) {
+        getAnalytics(app);
+      }
+    })
+    .catch(() => {
+      // Analytics is optional; ignore unsupported environments such as tests.
+    });
+}
+
 export const auth = getAuth(app);
-
-// Initialize Cloud Firestore and get a reference to the service
 export const db = getFirestore(app);
-
-
-
 export default app;

@@ -1,61 +1,92 @@
-import React, { useState, useEffect } from 'react';
-import { auth, db } from './firebase';
+import React, { useEffect, useMemo, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import Login from './components/Login';
 import AddCard from './components/AddCard';
-import ViewCards from './components/ViewCards';
+import Login from './components/Login';
 import ProfileSettings from './components/ProfileSettings';
+import PublicProfilePage from './components/PublicProfilePage';
+import ViewCards from './components/ViewCards';
+import StatCard from './components/ui/StatCard';
+import useCards from './hooks/useCards';
+import { auth } from './firebase';
+import { fetchUserProfile } from './services/profileService';
+import { getPublicProfileSlugFromPath } from './utils/publicProfile';
 import './App.css';
 
 function App() {
   const [user, setUser] = useState(null);
-  const [userName, setUserName] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [showAddCard, setShowAddCard] = useState(false);
-  const [showViewCards, setShowViewCards] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const [booting, setBooting] = useState(true);
   const [showProfileSettings, setShowProfileSettings] = useState(false);
-
-  // Fetch user's name from Firestore
-  const fetchUserName = async (uid) => {
-    try {
-      const userDoc = await getDoc(doc(db, 'users', uid));
-      if (userDoc.exists()) {
-        setUserName(userDoc.data().name);
-      } else {
-        // Fallback to email if name not found
-        setUserName(user.email.split('@')[0]);
-      }
-    } catch (error) {
-      console.error('Error fetching user name:', error);
-      setUserName(user.email.split('@')[0]);
-    }
-  };
+  const publicProfileSlug = useMemo(() => getPublicProfileSlugFromPath(window.location.pathname), []);
+  const {
+    cards = [],
+    loading = true,
+    error = '',
+    stats = { total: 0, withImages: 0, graded: 0, baseball: 0, recentYear: '—' },
+    addCard = async () => {},
+    deleteCard = async () => {}
+  } = useCards(user) || {};
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      if (user) {
-        fetchUserName(user.uid);
-      } else {
-        setUserName('');
+    if (publicProfileSlug) {
+      setBooting(false);
+      return undefined;
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
+
+      if (!currentUser) {
+        setProfile(null);
+        setBooting(false);
+        return;
       }
-      setLoading(false);
+
+      try {
+        const userProfile = await fetchUserProfile(currentUser.uid);
+        setProfile(userProfile || {
+          id: currentUser.uid,
+          name: currentUser.email || 'Collector',
+          email: currentUser.email || '',
+          publicProfileEnabled: false,
+          publicSlug: '',
+          shareDescription: ''
+        });
+      } catch (errorFetch) {
+        setProfile({
+          id: currentUser.uid,
+          name: currentUser.email || 'Collector',
+          email: currentUser.email || '',
+          publicProfileEnabled: false,
+          publicSlug: '',
+          shareDescription: ''
+        });
+      } finally {
+        setBooting(false);
+      }
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [publicProfileSlug]);
 
-  const handleNameUpdate = (newName) => {
-    setUserName(newName);
-  };
+  const statItems = useMemo(() => ([
+    { label: 'Total cards', value: stats.total, helper: 'Entire collection', accent: 'bg-slate-950' },
+    { label: 'Baseball', value: stats.baseball, helper: 'Cards tagged as baseball', accent: 'bg-sky-600' },
+    { label: 'With images', value: stats.withImages, helper: 'Visual inventory coverage', accent: 'bg-emerald-600' },
+    { label: 'Graded cards', value: stats.graded, helper: 'Slabbed / graded inventory', accent: 'bg-violet-600' },
+    { label: 'Newest year', value: stats.recentYear, helper: 'Most recent release in collection', accent: 'bg-amber-500' }
+  ]), [stats]);
 
-  if (loading) {
+  if (publicProfileSlug) {
+    return <PublicProfilePage slug={publicProfileSlug} />;
+  }
+
+  if (booting) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-white/20 border-t-white" />
+          <p className="mt-4 text-sm text-slate-300">Loading your collection workspace...</p>
         </div>
       </div>
     );
@@ -66,67 +97,43 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 fullscreen-app">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200 safe-area-top">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 space-y-4 sm:space-y-0">
-            <div className="w-full sm:w-auto">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Sports Cards Collection</h1>
-              <p className="text-sm sm:text-base text-gray-600">Welcome, {userName}!</p>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
-              <button 
-                onClick={() => setShowAddCard(!showAddCard)}
-                className={`w-full sm:w-auto px-4 py-2 rounded-lg font-medium transition duration-200 text-sm sm:text-base ${
-                  showAddCard 
-                    ? 'bg-gray-200 text-gray-700' 
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
-                }`}
-              >
-                {showAddCard ? 'Hide Add Card' : 'Add New Card'}
-              </button>
-              
-              <button 
-                onClick={() => setShowViewCards(!showViewCards)}
-                className={`w-full sm:w-auto px-4 py-2 rounded-lg font-medium transition duration-200 text-sm sm:text-base ${
-                  showViewCards 
-                    ? 'bg-gray-200 text-gray-700' 
-                    : 'bg-green-600 hover:bg-green-700 text-white'
-                }`}
-              >
-                {showViewCards ? 'Hide Cards' : 'View My Cards'}
-              </button>
-              
-              <button 
-                onClick={() => setShowProfileSettings(true)}
-                className="w-full sm:w-auto p-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition duration-200 flex items-center justify-center sm:justify-start"
-                title="Settings"
-              >
-                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span className="ml-2 sm:hidden">Settings</span>
-              </button>
-            </div>
+    <div className="min-h-screen bg-slate-100 text-slate-900">
+      <header className="border-b border-slate-200 bg-white/80 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-600">SportsCards</p>
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Baseball card inventory dashboard</h1>
+            <p className="mt-3 max-w-2xl text-sm text-slate-500 sm:text-base">
+              Welcome back, <span className="font-semibold text-slate-800">{profile?.name || 'Collector'}</span>. Your collection is stored in Firestore and now includes secure inline images plus OCR-assisted card entry.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <button type="button" onClick={() => setShowProfileSettings(true)} className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+              Profile settings
+            </button>
           </div>
         </div>
       </header>
-      
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8 safe-area-bottom">
-        {showAddCard && <AddCard />}
-        {showViewCards && <ViewCards />}
+
+      <main className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          {statItems.map((item) => (
+            <StatCard key={item.label} {...item} />
+          ))}
+        </section>
+
+        <section className="grid gap-8 xl:grid-cols-[1.05fr_0.95fr]">
+          <AddCard onSave={addCard} />
+          <ViewCards cards={cards} loading={loading} error={error} onDelete={deleteCard} />
+        </section>
       </main>
 
-      {/* Profile Settings Modal */}
       <ProfileSettings
         isOpen={showProfileSettings}
         onClose={() => setShowProfileSettings(false)}
-        userName={userName}
-        onNameUpdate={handleNameUpdate}
+        profile={profile}
+        onProfileUpdate={setProfile}
       />
     </div>
   );

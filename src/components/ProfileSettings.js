@@ -1,142 +1,200 @@
-import React, { useState, useEffect } from 'react';
-import { auth, db } from '../firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import React, { useEffect, useMemo, useState } from 'react';
 import { signOut } from 'firebase/auth';
+import { auth } from '../firebase';
+import { saveUserProfile } from '../services/profileService';
+import { buildPublicProfileUrl, createProfileSlug } from '../utils/publicProfile';
 
-function ProfileSettings({ isOpen, onClose, userName, onNameUpdate }) {
-  const [newName, setNewName] = useState('');
-  const [loading, setLoading] = useState(false);
+function ProfileSettings({ isOpen, onClose, profile, onProfileUpdate }) {
+  const [formState, setFormState] = useState({
+    name: profile?.name || '',
+    email: profile?.email || '',
+    publicProfileEnabled: profile?.publicProfileEnabled || false,
+    publicSlug: profile?.publicSlug || '',
+    shareDescription: profile?.shareDescription || ''
+  });
   const [message, setMessage] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setNewName(userName);
-  }, [userName]);
+    setFormState({
+      name: profile?.name || '',
+      email: profile?.email || auth.currentUser?.email || '',
+      publicProfileEnabled: profile?.publicProfileEnabled || false,
+      publicSlug: profile?.publicSlug || '',
+      shareDescription: profile?.shareDescription || ''
+    });
+  }, [profile]);
 
-  const handleUpdateName = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  const previewSlug = useMemo(() => (
+    createProfileSlug(formState.publicSlug || formState.name || '', auth.currentUser?.uid?.slice(0, 8) || 'collector')
+  ), [formState.name, formState.publicSlug]);
+
+  const publicUrl = useMemo(() => buildPublicProfileUrl(previewSlug), [previewSlug]);
+
+  if (!isOpen) {
+    return null;
+  }
+
+  const handleChange = (event) => {
+    const { name, value, type, checked } = event.target;
+    setFormState((previous) => ({
+      ...previous,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setSaving(true);
     setMessage('');
 
     try {
       const user = auth.currentUser;
-      if (user) {
-        // Use setDoc instead of updateDoc to create document if it doesn't exist
-        await setDoc(doc(db, 'users', user.uid), {
-          name: newName,
-          email: user.email,
-          updatedAt: new Date()
-        }, { merge: true }); // merge: true will update existing fields without overwriting
-        
-        setMessage('Name updated successfully!');
-        onNameUpdate(newName);
-        
-        // Clear message after 3 seconds
-        setTimeout(() => {
-          setMessage('');
-        }, 3000);
-      }
+      const nextProfile = await saveUserProfile(user.uid, {
+        ...profile,
+        ...formState,
+        email: user.email || formState.email,
+        createdAt: profile?.createdAt || new Date()
+      });
+      onProfileUpdate(nextProfile);
+      setMessage('Profile updated successfully.');
     } catch (error) {
-      setMessage('Error updating name: ' + error.message);
+      setMessage(error.message || 'Unable to update your profile.');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
   const handleLogout = async () => {
+    await signOut(auth);
+    onClose();
+  };
+
+  const handleCopyLink = async () => {
     try {
-      await signOut(auth);
-      onClose();
+      await navigator.clipboard.writeText(publicUrl);
+      setMessage('Public collection link copied to clipboard.');
     } catch (error) {
-      setMessage('Error signing out: ' + error.message);
+      setMessage('Could not copy automatically. You can still copy the URL manually.');
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Profile Settings</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition duration-200"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm">
+      <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-slate-200 bg-white p-6 shadow-2xl sm:p-8">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-sky-600">Profile</p>
+            <h2 className="mt-2 text-2xl font-semibold text-slate-900">Collector preferences</h2>
+            <p className="mt-2 text-sm text-slate-500">Update your display name, control public sharing and manage your session.</p>
+          </div>
+          <button type="button" onClick={onClose} className="rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-500 transition hover:border-slate-300 hover:text-slate-900">
+            Close
           </button>
         </div>
 
-        <form onSubmit={handleUpdateName} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Current Name
-            </label>
-            <p className="text-gray-600 mb-4">{userName}</p>
-          </div>
+        <div className="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Signed in as</p>
+          <p className="mt-2 text-sm font-medium text-slate-900">{auth.currentUser?.email || formState.email}</p>
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              New Name
-            </label>
+        <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+          <label className="block">
+            <span className="mb-2 block text-sm font-medium text-slate-700">Display name</span>
             <input
-              type="text"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-              placeholder="Enter your new name"
+              name="name"
+              value={formState.name}
+              onChange={handleChange}
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
+              placeholder="Your collector name"
               required
             />
-          </div>
+          </label>
 
-          {message && (
-            <div className={`p-3 rounded-lg text-sm ${
-              message.includes('Error') 
-                ? 'bg-red-100 text-red-700' 
-                : 'bg-green-100 text-green-700'
-            }`}>
+          <section className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">Public collection</h3>
+                <p className="mt-1 text-sm text-slate-500">Create a read-only public page so friends can browse your collection without signing in.</p>
+              </div>
+              <label className="inline-flex items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700">
+                <input
+                  type="checkbox"
+                  name="publicProfileEnabled"
+                  checked={formState.publicProfileEnabled}
+                  onChange={handleChange}
+                />
+                Share publicly
+              </label>
+            </div>
+
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <label>
+                <span className="mb-2 block text-sm font-medium text-slate-700">Public slug</span>
+                <input
+                  name="publicSlug"
+                  value={formState.publicSlug}
+                  onChange={handleChange}
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
+                  placeholder="juan-cards"
+                />
+                <span className="mt-2 block text-xs text-slate-500">Only letters, numbers and hyphens are kept in the final URL.</span>
+              </label>
+
+              <label>
+                <span className="mb-2 block text-sm font-medium text-slate-700">Short intro</span>
+                <textarea
+                  name="shareDescription"
+                  value={formState.shareDescription}
+                  onChange={handleChange}
+                  rows="4"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
+                  placeholder="Vintage baseball focus, graded rookies and modern parallels."
+                />
+              </label>
+            </div>
+
+            <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Preview link</p>
+              <p className="mt-2 break-all text-sm font-medium text-slate-900">{publicUrl}</p>
+              <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                >
+                  Copy link
+                </button>
+                <a
+                  href={publicUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+                >
+                  Open public page
+                </a>
+              </div>
+            </div>
+          </section>
+
+          {message ? (
+            <div className={`rounded-2xl px-4 py-3 text-sm ${message.toLowerCase().includes('unable') || message.toLowerCase().includes('could not') || message.toLowerCase().includes('already in use') ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'}`}>
               {message}
             </div>
-          )}
+          ) : null}
 
-          <div className="flex space-x-4">
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-3 px-4 rounded-lg transition duration-200"
-            >
-              {loading ? 'Updating...' : 'Update Name'}
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <button type="submit" disabled={saving} className="inline-flex flex-1 items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:bg-slate-400">
+              {saving ? 'Saving...' : 'Save changes'}
             </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-3 px-4 rounded-lg transition duration-200"
-            >
-              Cancel
+            <button type="button" onClick={handleLogout} className="inline-flex flex-1 items-center justify-center rounded-2xl bg-rose-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-rose-700">
+              Sign out
             </button>
           </div>
         </form>
-
-        {/* Divider */}
-        <div className="my-6 border-t border-gray-200"></div>
-
-        {/* Logout Section */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium text-gray-900">Account</h3>
-          <button
-            onClick={handleLogout}
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center space-x-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            <span>Sign Out</span>
-          </button>
-        </div>
       </div>
     </div>
   );
 }
 
-export default ProfileSettings; 
+export default ProfileSettings;
