@@ -4,6 +4,7 @@ import { getSetsForManufacturer } from '../data/sets';
 import { prepareImageAsset } from '../utils/imageProcessing';
 import { parseCardText } from '../utils/cardTextParser';
 import { recognizeCardText } from '../utils/ocr';
+import CollectionPicker from './CollectionPicker';
 import Toast from './Toast';
 
 const emptyCard = {
@@ -18,10 +19,11 @@ const emptyCard = {
   gradeNumber: '',
   notes: '',
   imageUrl: '',
-  ocrText: ''
+  ocrText: '',
+  collectionIds: []
 };
 
-function AddCard({ onSave }) {
+function AddCard({ onSave, collections = [], onEnsureCollections }) {
   const [formData, setFormData] = useState(emptyCard);
   const [processingImage, setProcessingImage] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -61,18 +63,11 @@ function AddCard({ onSave }) {
 
   const handleImageSelection = async (event) => {
     const file = event.target.files?.[0];
-
-    if (!file) {
-      return;
-    }
-
+    if (!file) return;
     try {
       setProcessingImage(true);
       const imageAsset = await prepareImageAsset(file);
-      setFormData((previous) => ({
-        ...previous,
-        imageUrl: imageAsset.previewUrl
-      }));
+      setFormData((previous) => ({ ...previous, imageUrl: imageAsset.previewUrl }));
       showToast('Image optimized and ready.', 'success');
     } catch (error) {
       showToast(error.message, 'error');
@@ -86,19 +81,16 @@ function AddCard({ onSave }) {
       showToast('Add an image first to run OCR.', 'warning');
       return;
     }
-
     try {
       setOcrRunning(true);
       setOcrProgress(0);
       const text = await recognizeCardText(formData.imageUrl, setOcrProgress);
       const parsed = parseCardText(text, formData.sport);
-
       setFormData((previous) => ({
         ...previous,
         ...Object.fromEntries(Object.entries(parsed).filter(([, value]) => value)),
         notes: previous.notes || parsed.notes
       }));
-
       showToast('OCR completed. Review the suggested fields before saving.', 'success');
     } catch (error) {
       showToast(error.message || 'OCR failed to process this image.', 'error');
@@ -117,7 +109,30 @@ function AddCard({ onSave }) {
 
     try {
       setSaving(true);
-      await onSave(formData);
+
+      // Resolve collection assignment
+      let resolvedCollections = collections;
+
+      // Case 1: no collections yet → auto-create "Mi colección"
+      if (resolvedCollections.length === 0) {
+        resolvedCollections = await onEnsureCollections();
+      }
+
+      let collectionIds = formData.collectionIds;
+
+      // Case 1 & 2: zero or one collection → auto-assign
+      if (resolvedCollections.length <= 1) {
+        collectionIds = resolvedCollections.map((c) => c.id);
+      }
+
+      // Case 3: multiple collections → user must pick at least one
+      if (resolvedCollections.length > 1 && collectionIds.length === 0) {
+        showToast('Selecciona al menos una colección.', 'warning');
+        setSaving(false);
+        return;
+      }
+
+      await onSave({ ...formData, collectionIds });
       setFormData(emptyCard);
       setOcrProgress(0);
       showToast('Card saved successfully.', 'success');
@@ -152,7 +167,7 @@ function AddCard({ onSave }) {
                 <>
                   <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-900 text-white">OCR</div>
                   <p className="text-lg font-semibold text-slate-900">Upload front image</p>
-                  <p className="mt-2 max-w-sm text-sm text-slate-500">The image is compressed in-browser and stored inline with the card document, avoiding third-party upload keys.</p>
+                  <p className="mt-2 max-w-sm text-sm text-slate-500">The image is compressed in-browser and stored inline with the card document.</p>
                 </>
               )}
             </label>
@@ -161,21 +176,21 @@ function AddCard({ onSave }) {
               <button type="button" onClick={applyOcr} disabled={!formData.imageUrl || ocrRunning || processingImage} className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300">
                 {ocrRunning ? `OCR ${ocrProgress}%` : 'Run OCR assist'}
               </button>
-              <button type="button" onClick={() => setFormData((previous) => ({ ...previous, imageUrl: '', ocrText: '' }))} className="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+              <button type="button" onClick={() => setFormData((p) => ({ ...p, imageUrl: '', ocrText: '' }))} className="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
                 Remove image
               </button>
             </div>
 
-            {processingImage ? (
+            {processingImage && (
               <div className="rounded-2xl bg-slate-100 px-4 py-3 text-sm text-slate-600">Optimizing image...</div>
-            ) : null}
+            )}
 
-            {formData.ocrText ? (
+            {formData.ocrText && (
               <div className="rounded-3xl border border-sky-200 bg-sky-50 p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">OCR extracted text</p>
                 <p className="mt-3 max-h-32 overflow-auto whitespace-pre-wrap text-sm text-slate-700">{formData.ocrText}</p>
               </div>
-            ) : null}
+            )}
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -199,14 +214,14 @@ function AddCard({ onSave }) {
               <span className="mb-2 block text-sm font-medium text-slate-700">Manufacturer *</span>
               <select name="manufacturer" value={formData.manufacturer} onChange={handleChange} className="field" required>
                 <option value="">Select manufacturer</option>
-                {manufacturers.map((manufacturer) => <option key={manufacturer} value={manufacturer}>{manufacturer}</option>)}
+                {manufacturers.map((m) => <option key={m} value={m}>{m}</option>)}
               </select>
             </label>
             <label>
               <span className="mb-2 block text-sm font-medium text-slate-700">Set</span>
               <select name="set" value={formData.set} onChange={handleChange} className="field">
                 <option value="">Select set</option>
-                {sets.map((entry) => <option key={entry} value={entry}>{entry}</option>)}
+                {sets.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </label>
             <label>
@@ -220,7 +235,7 @@ function AddCard({ onSave }) {
                 <option value="Yes">Yes</option>
               </select>
             </label>
-            {formData.graded === 'Yes' ? (
+            {formData.graded === 'Yes' && (
               <>
                 <label>
                   <span className="mb-2 block text-sm font-medium text-slate-700">Grading company</span>
@@ -231,11 +246,20 @@ function AddCard({ onSave }) {
                   <input name="gradeNumber" value={formData.gradeNumber} onChange={handleChange} className="field" placeholder="10" />
                 </label>
               </>
-            ) : null}
+            )}
             <label className="sm:col-span-2">
               <span className="mb-2 block text-sm font-medium text-slate-700">Notes</span>
               <textarea name="notes" value={formData.notes} onChange={handleChange} rows="5" className="field min-h-[140px]" placeholder="Condition, parallels, purchase info, etc." />
             </label>
+
+            {/* Collection picker – only visible when 2+ collections exist */}
+            <div className="sm:col-span-2">
+              <CollectionPicker
+                collections={collections}
+                selectedIds={formData.collectionIds}
+                onChange={(ids) => setFormData((p) => ({ ...p, collectionIds: ids }))}
+              />
+            </div>
           </div>
         </div>
 

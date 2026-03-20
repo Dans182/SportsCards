@@ -6,7 +6,9 @@ import ProfileSettings from './components/ProfileSettings';
 import PublicProfilePage from './components/PublicProfilePage';
 import ViewCards from './components/ViewCards';
 import StatCard from './components/ui/StatCard';
+import CollectionsManager from './components/CollectionsManager';
 import useCards from './hooks/useCards';
+import useCollections from './hooks/useCollections';
 import { auth } from './firebase';
 import { fetchUserProfile } from './services/profileService';
 import { getPublicProfileSlugFromPath } from './utils/publicProfile';
@@ -17,15 +19,28 @@ function App() {
   const [profile, setProfile] = useState(null);
   const [booting, setBooting] = useState(true);
   const [showProfileSettings, setShowProfileSettings] = useState(false);
+  const [showCollectionsManager, setShowCollectionsManager] = useState(false);
+  const [activeCollectionId, setActiveCollectionId] = useState(null); // null = "All"
+
   const publicProfileSlug = useMemo(() => getPublicProfileSlugFromPath(window.location.pathname), []);
+
   const {
     cards = [],
     loading = true,
     error = '',
     stats = { total: 0, withImages: 0, graded: 0, baseball: 0, recentYear: '—' },
-    addCard = async () => {},
-    deleteCard = async () => {}
+    addCard = async () => { },
+    deleteCard = async () => { }
   } = useCards(user) || {};
+
+  const {
+    collections,
+    loading: collectionsLoading,
+    addCollection,
+    editCollection,
+    removeCollection,
+    ensureDefault
+  } = useCollections(user);
 
   useEffect(() => {
     if (publicProfileSlug) {
@@ -52,7 +67,7 @@ function App() {
           publicSlug: '',
           shareDescription: ''
         });
-      } catch (errorFetch) {
+      } catch {
         setProfile({
           id: currentUser.uid,
           name: currentUser.email || 'Collector',
@@ -68,6 +83,14 @@ function App() {
 
     return () => unsubscribe();
   }, [publicProfileSlug]);
+
+  // Cards filtered by active collection tab
+  const visibleCards = useMemo(() => {
+    if (!activeCollectionId) return cards;
+    return cards.filter((c) =>
+      Array.isArray(c.collectionIds) && c.collectionIds.includes(activeCollectionId)
+    );
+  }, [cards, activeCollectionId]);
 
   const statItems = useMemo(() => ([
     { label: 'Total cards', value: stats.total, helper: 'Entire collection', accent: 'bg-slate-950' },
@@ -96,6 +119,9 @@ function App() {
     return <Login />;
   }
 
+  // Active collection label for ViewCards subtitle
+  const activeCollection = collections.find((c) => c.id === activeCollectionId);
+
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
       <header className="border-b border-slate-200 bg-white/80 backdrop-blur">
@@ -104,16 +130,73 @@ function App() {
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-600">SportsCards</p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Baseball card inventory dashboard</h1>
             <p className="mt-3 max-w-2xl text-sm text-slate-500 sm:text-base">
-              Welcome back, <span className="font-semibold text-slate-800">{profile?.name || 'Collector'}</span>. Your collection is stored in Firestore and now includes secure inline images plus OCR-assisted card entry.
+              Welcome back, <span className="font-semibold text-slate-800">{profile?.name || 'Collector'}</span>.
             </p>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            <button type="button" onClick={() => setShowProfileSettings(true)} className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+            <button
+              type="button"
+              onClick={() => setShowCollectionsManager(true)}
+              className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+            >
+              Mis colecciones
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowProfileSettings(true)}
+              className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+            >
               Profile settings
             </button>
           </div>
         </div>
+
+        {/* Collection tab bar */}
+        {!collectionsLoading && collections.length > 0 && (
+          <div className="mx-auto max-w-7xl px-4 pb-0 sm:px-6 lg:px-8">
+            <div className="flex gap-1 overflow-x-auto pb-0 scrollbar-hide">
+              {/* "All" tab */}
+              <button
+                type="button"
+                onClick={() => setActiveCollectionId(null)}
+                className={`whitespace-nowrap rounded-t-2xl border-b-2 px-5 py-3 text-sm font-semibold transition
+                  ${!activeCollectionId
+                    ? 'border-sky-600 bg-sky-50 text-sky-700'
+                    : 'border-transparent bg-white text-slate-500 hover:text-slate-700'
+                  }`}
+              >
+                Todas las cartas
+                <span className="ml-2 rounded-full bg-slate-200 px-2 py-0.5 text-xs text-slate-600">
+                  {cards.length}
+                </span>
+              </button>
+
+              {collections.map((col) => {
+                const count = cards.filter(
+                  (c) => Array.isArray(c.collectionIds) && c.collectionIds.includes(col.id)
+                ).length;
+                return (
+                  <button
+                    key={col.id}
+                    type="button"
+                    onClick={() => setActiveCollectionId(col.id)}
+                    className={`whitespace-nowrap rounded-t-2xl border-b-2 px-5 py-3 text-sm font-semibold transition
+                      ${activeCollectionId === col.id
+                        ? 'border-sky-600 bg-sky-50 text-sky-700'
+                        : 'border-transparent bg-white text-slate-500 hover:text-slate-700'
+                      }`}
+                  >
+                    {col.name}
+                    <span className="ml-2 rounded-full bg-slate-200 px-2 py-0.5 text-xs text-slate-600">
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </header>
 
       <main className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
@@ -124,10 +207,54 @@ function App() {
         </section>
 
         <section className="grid gap-8 xl:grid-cols-[1.05fr_0.95fr]">
-          <AddCard onSave={addCard} />
-          <ViewCards cards={cards} loading={loading} error={error} onDelete={deleteCard} />
+          <AddCard
+            onSave={addCard}
+            collections={collections}
+            onEnsureCollections={ensureDefault}
+          />
+          <ViewCards
+            cards={visibleCards}
+            loading={loading}
+            error={error}
+            onDelete={deleteCard}
+            collections={collections}
+            title={activeCollection ? activeCollection.name : 'Tu catálogo completo'}
+            subtitle={
+              activeCollection
+                ? activeCollection.description || `Cartas en "${activeCollection.name}".`
+                : 'Search, review and clean up your baseball card inventory.'
+            }
+          />
         </section>
       </main>
+
+      {/* Collections Manager Modal */}
+      {showCollectionsManager && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm">
+          <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-[2rem] border border-slate-200 bg-white p-6 shadow-2xl sm:p-8">
+            <div className="flex items-start justify-between gap-4 mb-6">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.25em] text-sky-600">Organización</p>
+                <h2 className="mt-2 text-2xl font-semibold text-slate-900">Mis colecciones</h2>
+                <p className="mt-1 text-sm text-slate-500">Crea y gestiona grupos para organizar tus cartas.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCollectionsManager(false)}
+                className="rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-500 hover:border-slate-300 hover:text-slate-900"
+              >
+                Cerrar
+              </button>
+            </div>
+            <CollectionsManager
+              collections={collections}
+              onAdd={addCollection}
+              onEdit={editCollection}
+              onDelete={removeCollection}
+            />
+          </div>
+        </div>
+      )}
 
       <ProfileSettings
         isOpen={showProfileSettings}

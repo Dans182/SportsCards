@@ -4,13 +4,13 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || 'AIzaSyB2sP0FNaZmrz68_acOvFkb6H22UxAT4Xc',
-  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || 'sportscards-5b469.firebaseapp.com',
-  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || 'sportscards-5b469',
-  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || 'sportscards-5b469.firebasestorage.app',
-  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || '821627721273',
-  appId: process.env.REACT_APP_FIREBASE_APP_ID || '1:821627721273:web:f99a665fd0ca95eb7cdfe8',
-  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID || 'G-DVH4JCJJ99'
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || 'AIzaSyBsNkFbaaYeP3KwcFqT-jlVOx_J08nGkWs',
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || 'sportscards-82dbf.firebaseapp.com',
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || 'sportscards-82dbf',
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || 'sportscards-82dbf.firebasestorage.app',
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || '888515419817',
+  appId: process.env.REACT_APP_FIREBASE_APP_ID || '1:888515419817:web:4be2fa428fa4953d1093b8',
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID || 'G-Q30V2M5JLC'
 };
 
 const app = initializeApp(firebaseConfig);

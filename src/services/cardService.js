@@ -20,6 +20,8 @@ const normalizeCardPayload = (card, userId) => ({
   notes: card.notes?.trim() || '',
   imageUrl: card.imageUrl || '',
   ocrText: card.ocrText?.trim() || '',
+  // many-to-many: array of collection IDs this card belongs to
+  collectionIds: Array.isArray(card.collectionIds) ? card.collectionIds : [],
   updatedAt: new Date(),
   userId
 });
@@ -28,6 +30,16 @@ export async function fetchCardsByUser(userId) {
   const q = query(cardsCollection, where('userId', '==', userId));
   const snapshot = await getDocs(q);
 
+  return sortCardsByRecentUpdate(snapshot.docs.map((entry) => ({ id: entry.id, ...entry.data() })));
+}
+
+export async function fetchCardsByCollection(userId, collectionId) {
+  const q = query(
+    cardsCollection,
+    where('userId', '==', userId),
+    where('collectionIds', 'array-contains', collectionId)
+  );
+  const snapshot = await getDocs(q);
   return sortCardsByRecentUpdate(snapshot.docs.map((entry) => ({ id: entry.id, ...entry.data() })));
 }
 

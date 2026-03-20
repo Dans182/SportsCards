@@ -8,6 +8,7 @@ function ViewCards({
   error,
   onDelete,
   readOnly = false,
+  collections = [],
   title = 'Your catalog',
   subtitle = 'Search, review and clean up your baseball card inventory.',
   emptyTitle = 'No cards match this filter',
@@ -20,12 +21,19 @@ function ViewCards({
   const [sortBy, setSortBy] = useState('updated');
   const [selectedCard, setSelectedCard] = useState(null);
   const [cardToDelete, setCardToDelete] = useState(null);
+  const [activeCollectionId, setActiveCollectionId] = useState('all');
 
   const filteredCards = useMemo(() => {
     const search = query.trim().toLowerCase();
 
     return [...cards]
       .filter((card) => {
+        if (activeCollectionId !== 'all') {
+          if (!Array.isArray(card.collectionIds) || !card.collectionIds.includes(activeCollectionId)) {
+            return false;
+          }
+        }
+
         if (sport !== 'All' && card.sport !== sport) {
           return false;
         }
@@ -59,7 +67,7 @@ function ViewCards({
         const rightTime = right.updatedAt?.seconds || right.createdAt?.seconds || 0;
         return rightTime - leftTime;
       });
-  }, [cards, gradedOnly, query, sortBy, sport, withImagesOnly]);
+  }, [cards, gradedOnly, query, sortBy, sport, withImagesOnly, activeCollectionId]);
 
   if (loading) {
     return <section className="rounded-[2rem] border border-slate-200 bg-white p-8 text-sm text-slate-500 shadow-sm">Loading collection...</section>;
@@ -103,6 +111,34 @@ function ViewCards({
           Images only
         </label>
       </div>
+
+      {!readOnly && collections.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveCollectionId('all')}
+            className={`rounded-full px-4 py-2 text-sm font-medium transition ${activeCollectionId === 'all'
+                ? 'bg-slate-900 text-white'
+                : 'border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+              }`}
+          >
+            All collections
+          </button>
+          {collections.map((col) => (
+            <button
+              key={col.id}
+              type="button"
+              onClick={() => setActiveCollectionId(col.id)}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition ${activeCollectionId === col.id
+                  ? 'bg-sky-600 text-white'
+                  : 'border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                }`}
+            >
+              {col.name}
+            </button>
+          ))}
+        </div>
+      )}
 
       {filteredCards.length ? (
         <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
