@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import CardDetailModal from './CardDetailModal';
+import EditCardModal from './EditCardModal';
 import ConfirmModal from './ConfirmModal';
 
 function ViewCards({
@@ -7,6 +8,7 @@ function ViewCards({
   loading,
   error,
   onDelete,
+  onEdit,
   readOnly = false,
   collections = [],
   title = 'Your catalog',
@@ -16,11 +18,12 @@ function ViewCards({
 }) {
   const [query, setQuery] = useState('');
   const [sport, setSport] = useState('All');
-  const [gradedOnly, setGradedOnly] = useState(false);
+  // const [gradedOnly, setGradedOnly] = useState(false);
   const [withImagesOnly, setWithImagesOnly] = useState(false);
   const [sortBy, setSortBy] = useState('updated');
   const [selectedCard, setSelectedCard] = useState(null);
   const [cardToDelete, setCardToDelete] = useState(null);
+  const [cardToEdit, setCardToEdit] = useState(null);
   const [activeCollectionId, setActiveCollectionId] = useState('all');
 
   const filteredCards = useMemo(() => {
@@ -38,9 +41,9 @@ function ViewCards({
           return false;
         }
 
-        if (gradedOnly && card.graded !== 'Yes') {
-          return false;
-        }
+        // if (gradedOnly && card.graded !== 'Yes') {
+        //   return false;
+        // }
 
         if (withImagesOnly && !card.imageUrl) {
           return false;
@@ -67,7 +70,8 @@ function ViewCards({
         const rightTime = right.updatedAt?.seconds || right.createdAt?.seconds || 0;
         return rightTime - leftTime;
       });
-  }, [cards, gradedOnly, query, sortBy, sport, withImagesOnly, activeCollectionId]);
+  }, [cards, query, sortBy, sport, withImagesOnly, activeCollectionId]);
+  // }, [cards, gradedOnly, query, sortBy, sport, withImagesOnly, activeCollectionId]);
 
   if (loading) {
     return <section className="rounded-[2rem] border border-slate-200 bg-white p-8 text-sm text-slate-500 shadow-sm">Loading collection...</section>;
@@ -102,10 +106,10 @@ function ViewCards({
           <option value="year">Newest year</option>
           <option value="player">Player A-Z</option>
         </select>
-        <label className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-600">
+        {/* <label className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-600">
           <input type="checkbox" checked={gradedOnly} onChange={(event) => setGradedOnly(event.target.checked)} />
           Graded only
-        </label>
+        </label> */}
         <label className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-600">
           <input type="checkbox" checked={withImagesOnly} onChange={(event) => setWithImagesOnly(event.target.checked)} />
           Images only
@@ -118,8 +122,8 @@ function ViewCards({
             type="button"
             onClick={() => setActiveCollectionId('all')}
             className={`rounded-full px-4 py-2 text-sm font-medium transition ${activeCollectionId === 'all'
-                ? 'bg-slate-900 text-white'
-                : 'border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+              ? 'bg-slate-900 text-white'
+              : 'border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
               }`}
           >
             All collections
@@ -130,8 +134,8 @@ function ViewCards({
               type="button"
               onClick={() => setActiveCollectionId(col.id)}
               className={`rounded-full px-4 py-2 text-sm font-medium transition ${activeCollectionId === col.id
-                  ? 'bg-sky-600 text-white'
-                  : 'border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                ? 'bg-sky-600 text-white'
+                : 'border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
                 }`}
             >
               {col.name}
@@ -163,15 +167,18 @@ function ViewCards({
                   <div className="flex flex-wrap gap-2 text-xs font-medium text-slate-600">
                     {card.set ? <span className="rounded-full bg-white px-3 py-1">{card.set}</span> : null}
                     {card.cardNumber ? <span className="rounded-full bg-white px-3 py-1">#{card.cardNumber}</span> : null}
-                    {card.graded === 'Yes' ? <span className="rounded-full bg-emerald-100 px-3 py-1 text-emerald-700">{card.gradingCompany} {card.gradeNumber}</span> : null}
+                    {/* {card.graded === 'Yes' ? <span className="rounded-full bg-emerald-100 px-3 py-1 text-emerald-700">{card.gradingCompany} {card.gradeNumber}</span> : null} */}
                   </div>
                   {card.notes ? <p className="line-clamp-2 text-sm text-slate-500">{card.notes}</p> : null}
                 </div>
               </button>
-              <div className="flex gap-3 border-t border-slate-200 bg-white p-4">
-                <button type="button" onClick={() => setSelectedCard(card)} className="flex-1 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">View</button>
+              <div className="flex gap-2 border-t border-slate-200 bg-white p-4">
+                <button type="button" onClick={() => setSelectedCard(card)} className="flex-1 rounded-2xl border border-slate-200 px-2 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50" title="View">👁 View</button>
+                {!readOnly && onEdit ? (
+                  <button type="button" onClick={() => setCardToEdit(card)} className="flex-1 rounded-2xl bg-sky-600 px-2 py-2 text-sm font-semibold text-white transition hover:bg-sky-700" title="Edit">✏️ Edit</button>
+                ) : null}
                 {!readOnly ? (
-                  <button type="button" onClick={() => setCardToDelete(card)} className="flex-1 rounded-2xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700">Delete</button>
+                  <button type="button" onClick={() => setCardToDelete(card)} className="flex-1 rounded-2xl bg-rose-600 px-2 py-2 text-sm font-semibold text-white transition hover:bg-rose-700" title="Delete">🗑 Delete</button>
                 ) : null}
               </div>
             </article>
@@ -185,6 +192,13 @@ function ViewCards({
       )}
 
       <CardDetailModal isOpen={Boolean(selectedCard)} card={selectedCard} onClose={() => setSelectedCard(null)} />
+      <EditCardModal
+        isOpen={Boolean(cardToEdit)}
+        card={cardToEdit}
+        collections={collections}
+        onSave={async (id, data) => { await onEdit(id, data); setCardToEdit(null); }}
+        onClose={() => setCardToEdit(null)}
+      />
       {!readOnly ? (
         <ConfirmModal
           isOpen={Boolean(cardToDelete)}

@@ -34,7 +34,7 @@ function CardDetailModal({ isOpen, onClose, card }) {
               ['Sport', card.sport],
               ['Set', card.set || '—'],
               ['Card number', card.cardNumber || '—'],
-              ['Graded', card.graded === 'Yes' ? `${card.gradingCompany || ''} ${card.gradeNumber || ''}`.trim() : 'No'],
+              // ['Graded', card.graded === 'Yes' ? `${card.gradingCompany || ''} ${card.gradeNumber || ''}`.trim() : 'No'],
             ].map(([label, value]) => (
               <div key={label} className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
                 <dt className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{label}</dt>

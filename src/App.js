@@ -30,6 +30,7 @@ function App() {
     error = '',
     stats = { total: 0, withImages: 0, graded: 0, baseball: 0, recentYear: '—' },
     addCard = async () => { },
+    updateCard = async () => { },
     deleteCard = async () => { }
   } = useCards(user) || {};
 
@@ -96,7 +97,7 @@ function App() {
     { label: 'Total cards', value: stats.total, helper: 'Entire collection', accent: 'bg-slate-950' },
     { label: 'Baseball', value: stats.baseball, helper: 'Cards tagged as baseball', accent: 'bg-sky-600' },
     { label: 'With images', value: stats.withImages, helper: 'Visual inventory coverage', accent: 'bg-emerald-600' },
-    { label: 'Graded cards', value: stats.graded, helper: 'Slabbed / graded inventory', accent: 'bg-violet-600' },
+    // { label: 'Graded cards', value: stats.graded, helper: 'Slabbed / graded inventory', accent: 'bg-violet-600' },
     { label: 'Newest year', value: stats.recentYear, helper: 'Most recent release in collection', accent: 'bg-amber-500' }
   ]), [stats]);
 
@@ -206,27 +207,32 @@ function App() {
           ))}
         </section>
 
-        <section className="grid gap-8 xl:grid-cols-[1.05fr_0.95fr]">
-          <AddCard
-            onSave={addCard}
-            collections={collections}
-            onEnsureCollections={ensureDefault}
-          />
-          <ViewCards
-            cards={visibleCards}
-            loading={loading}
-            error={error}
-            onDelete={deleteCard}
-            collections={collections}
-            title={activeCollection ? activeCollection.name : 'Tu catálogo completo'}
-            subtitle={
-              activeCollection
-                ? activeCollection.description || `Cartas en "${activeCollection.name}".`
-                : 'Search, review and clean up your baseball card inventory.'
-            }
-          />
-        </section>
+        <AddCard
+          onSave={addCard}
+          collections={collections}
+          onEnsureCollections={ensureDefault}
+        />
+
+
+        <ViewCards
+          cards={cards}
+          loading={loading}
+          error={error}
+          onDelete={deleteCard}
+          onEdit={updateCard}
+          collections={collections}
+          title={activeCollection ? activeCollection.name : 'Tu catálogo completo'}
+          subtitle={
+            activeCollection
+              ? activeCollection.description || `Cartas en "${activeCollection.name}".`
+              : 'Search, review and clean up your baseball card inventory.'
+          } emptyTitle="No public cards available"
+        />
       </main>
+
+
+
+
 
       {/* Collections Manager Modal */}
       {showCollectionsManager && (

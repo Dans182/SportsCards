@@ -7,7 +7,7 @@ import { fetchPublicProfileBySlug } from '../services/profileService';
 const emptyStats = {
   total: 0,
   withImages: 0,
-  graded: 0,
+  // graded: 0,
   baseball: 0,
   recentYear: '—'
 };
@@ -71,7 +71,7 @@ function PublicProfilePage({ slug }) {
     return {
       total: cards.length,
       withImages: cards.filter((card) => Boolean(card.imageUrl)).length,
-      graded: cards.filter((card) => card.graded === 'Yes').length,
+      // graded: cards.filter((card) => card.graded === 'Yes').length,
       baseball: cards.filter((card) => card.sport === 'Baseball').length,
       recentYear: numericYears.length ? Math.max(...numericYears).toString() : '—'
     };
@@ -81,7 +81,7 @@ function PublicProfilePage({ slug }) {
     { label: 'Total cards', value: stats.total, helper: 'Publicly shared inventory', accent: 'bg-slate-950' },
     { label: 'Baseball', value: stats.baseball, helper: 'Baseball cards in this collection', accent: 'bg-sky-600' },
     { label: 'With images', value: stats.withImages, helper: 'Cards with a visible scan', accent: 'bg-emerald-600' },
-    { label: 'Graded cards', value: stats.graded, helper: 'Cards marked as graded', accent: 'bg-violet-600' },
+    // { label: 'Graded cards', value: stats.graded, helper: 'Cards marked as graded', accent: 'bg-violet-600' },
     { label: 'Newest year', value: stats.recentYear, helper: 'Most recent release shared', accent: 'bg-amber-500' }
   ]), [stats]);
 

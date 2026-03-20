@@ -68,7 +68,7 @@ export function parseCardText(text, preferredSport = 'Baseball') {
     manufacturer,
     set: matchedSet,
     cardNumber: cardNumberMatch?.[1] || '',
-    graded: gradeCompany ? 'Yes' : 'No',
+    // graded: gradeCompany ? 'Yes' : 'No',
     gradingCompany: gradeCompany,
     gradeNumber: gradeMatch?.[1] || '',
     ocrText: cleanText.trim(),

@@ -14,7 +14,7 @@ const normalizeCardPayload = (card, userId) => ({
   sport: card.sport?.trim() || '',
   set: card.set?.trim() || '',
   cardNumber: card.cardNumber?.trim() || '',
-  graded: card.graded || 'No',
+  // graded: card.graded || 'No',
   gradingCompany: card.gradingCompany?.trim() || '',
   gradeNumber: card.gradeNumber?.toString().trim() || '',
   notes: card.notes?.trim() || '',

@@ -4,7 +4,7 @@ import { createCard, fetchCardsByUser, removeCard, saveCard } from '../services/
 const emptyStats = {
   total: 0,
   withImages: 0,
-  graded: 0,
+  // graded: 0,
   baseball: 0,
   recentYear: '—'
 };
@@ -68,7 +68,7 @@ export default function useCards(user) {
     return {
       total: cards.length,
       withImages: cards.filter((card) => Boolean(card.imageUrl)).length,
-      graded: cards.filter((card) => card.graded === 'Yes').length,
+      // graded: cards.filter((card) => card.graded === 'Yes').length,
       baseball: cards.filter((card) => card.sport === 'Baseball').length,
       recentYear: numericYears.length ? Math.max(...numericYears).toString() : '—'
     };

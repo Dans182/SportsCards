@@ -14,9 +14,10 @@ const emptyCard = {
   sport: 'Baseball',
   set: '',
   cardNumber: '',
-  graded: 'No',
-  gradingCompany: '',
-  gradeNumber: '',
+  // graded: 'No',
+  // gradingCompany: '',
+  // gradeNumber: '',
+  debut: '',
   notes: '',
   imageUrl: '',
   ocrText: '',
@@ -52,10 +53,10 @@ function AddCard({ onSave, collections = [], onEnsureCollections }) {
         nextState.set = '';
       }
 
-      if (name === 'graded' && value === 'No') {
-        nextState.gradingCompany = '';
-        nextState.gradeNumber = '';
-      }
+      // if (name === 'graded' && value === 'No') {
+      //   nextState.gradingCompany = '';
+      //   nextState.gradeNumber = '';
+      // }
 
       return nextState;
     });
@@ -228,7 +229,7 @@ function AddCard({ onSave, collections = [], onEnsureCollections }) {
               <span className="mb-2 block text-sm font-medium text-slate-700">Card number</span>
               <input name="cardNumber" value={formData.cardNumber} onChange={handleChange} className="field" placeholder="#123" />
             </label>
-            <label>
+            {/* <label>
               <span className="mb-2 block text-sm font-medium text-slate-700">Graded?</span>
               <select name="graded" value={formData.graded} onChange={handleChange} className="field">
                 <option value="No">No</option>
@@ -246,7 +247,7 @@ function AddCard({ onSave, collections = [], onEnsureCollections }) {
                   <input name="gradeNumber" value={formData.gradeNumber} onChange={handleChange} className="field" placeholder="10" />
                 </label>
               </>
-            )}
+            )} */}
             <label className="sm:col-span-2">
               <span className="mb-2 block text-sm font-medium text-slate-700">Notes</span>
               <textarea name="notes" value={formData.notes} onChange={handleChange} rows="5" className="field min-h-[140px]" placeholder="Condition, parallels, purchase info, etc." />
