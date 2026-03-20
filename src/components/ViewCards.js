@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import CardDetailModal from './CardDetailModal';
 import EditCardModal from './EditCardModal';
 import ConfirmModal from './ConfirmModal';
@@ -27,6 +27,12 @@ function ViewCards({
   const [cardToDelete, setCardToDelete] = useState(null);
   const [cardToEdit, setCardToEdit] = useState(null);
   const [activeCollectionId, setActiveCollectionId] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query, sport, debutFilter, withImagesOnly, sortBy, activeCollectionId]);
 
   const filteredCards = useMemo(() => {
     const search = query.trim().toLowerCase();
@@ -92,7 +98,12 @@ function ViewCards({
         return rightTime - leftTime;
       });
   }, [cards, query, sortBy, sport, withImagesOnly, activeCollectionId, debutFilter]);
-  // }, [cards, gradedOnly, query, sortBy, sport, withImagesOnly, activeCollectionId]);
+
+  const totalPages = Math.ceil(filteredCards.length / 12);
+  const paginatedCards = useMemo(() => {
+    const start = (currentPage - 1) * 12;
+    return filteredCards.slice(start, start + 12);
+  }, [filteredCards, currentPage]);
 
   if (loading) {
     return <section className="rounded-[2rem] border border-slate-200 bg-white p-8 text-sm text-slate-500 shadow-sm">Loading collection...</section>;
@@ -111,7 +122,7 @@ function ViewCards({
           <p className="mt-2 text-sm text-slate-500">{subtitle}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          {filteredCards.length} visible card{filteredCards.length === 1 ? '' : 's'}
+          {filteredCards.length} card{filteredCards.length === 1 ? '' : 's'} found
         </div>
       </div>
 
@@ -174,45 +185,70 @@ function ViewCards({
       )}
 
       {filteredCards.length ? (
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {filteredCards.map((card) => (
-            <article key={card.id} className="group overflow-hidden rounded-[1.75rem] border border-slate-200 bg-slate-50 transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200/80">
-              <button type="button" onClick={() => setSelectedCard(card)} className="block w-full text-left">
-                <div className="aspect-[4/5] overflow-hidden bg-slate-200">
-                  {card.imageUrl ? (
-                    <img src={card.imageUrl} alt={`${card.player} card`} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
-                  ) : (
-                    <div className="flex h-full items-center justify-center bg-slate-100 text-sm text-slate-500">No image</div>
-                  )}
-                </div>
-                <div className="space-y-4 p-5">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-slate-900">{card.player}</h3>
-                      <p className="mt-1 text-sm text-slate-500">{card.year} • {card.manufacturer}</p>
+        <>
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            {paginatedCards.map((card) => (
+              <article key={card.id} className="group overflow-hidden rounded-[1.75rem] border border-slate-200 bg-slate-50 transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200/80">
+                <button type="button" onClick={() => setSelectedCard(card)} className="block w-full text-left">
+                  <div className="aspect-[4/5] overflow-hidden bg-slate-200">
+                    {card.imageUrl ? (
+                      <img src={card.imageUrl} alt={`${card.player} card`} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
+                    ) : (
+                      <div className="flex h-full items-center justify-center bg-slate-100 text-sm text-slate-500">No image</div>
+                    )}
+                  </div>
+                  <div className="space-y-4 p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-900">{card.player}</h3>
+                        <p className="mt-1 text-sm text-slate-500">{card.year} • {card.manufacturer}</p>
+                      </div>
+                      <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">{card.sport}</span>
                     </div>
-                    <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">{card.sport}</span>
+                    <div className="flex flex-wrap gap-2 text-xs font-medium text-slate-600">
+                      {card.set ? <span className="rounded-full bg-white px-3 py-1">{card.set}</span> : null}
+                      {card.cardNumber ? <span className="rounded-full bg-white px-3 py-1">#{card.cardNumber}</span> : null}
+                    </div>
+                    {card.notes ? <p className="line-clamp-2 text-sm text-slate-500">{card.notes}</p> : null}
                   </div>
-                  <div className="flex flex-wrap gap-2 text-xs font-medium text-slate-600">
-                    {card.set ? <span className="rounded-full bg-white px-3 py-1">{card.set}</span> : null}
-                    {card.cardNumber ? <span className="rounded-full bg-white px-3 py-1">#{card.cardNumber}</span> : null}
-                    {/* {card.graded === 'Yes' ? <span className="rounded-full bg-emerald-100 px-3 py-1 text-emerald-700">{card.gradingCompany} {card.gradeNumber}</span> : null} */}
-                  </div>
-                  {card.notes ? <p className="line-clamp-2 text-sm text-slate-500">{card.notes}</p> : null}
+                </button>
+                <div className="flex gap-2 border-t border-slate-200 bg-white p-4">
+                  <button type="button" onClick={() => setSelectedCard(card)} className="flex-1 rounded-2xl border border-slate-200 px-2 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50" title="View">👁 View</button>
+                  {!readOnly && onEdit ? (
+                    <button type="button" onClick={() => setCardToEdit(card)} className="flex-1 rounded-2xl bg-sky-600 px-2 py-2 text-sm font-semibold text-white transition hover:bg-sky-700" title="Edit">✏️ Edit</button>
+                  ) : null}
+                  {!readOnly ? (
+                    <button type="button" onClick={() => setCardToDelete(card)} className="flex-1 rounded-2xl bg-rose-600 px-2 py-2 text-sm font-semibold text-white transition hover:bg-rose-700" title="Delete">🗑 Delete</button>
+                  ) : null}
                 </div>
+              </article>
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="mt-8 flex items-center justify-between border-t border-slate-200 pt-6">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="rounded-2xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-40"
+              >
+                Previous
               </button>
-              <div className="flex gap-2 border-t border-slate-200 bg-white p-4">
-                <button type="button" onClick={() => setSelectedCard(card)} className="flex-1 rounded-2xl border border-slate-200 px-2 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50" title="View">👁 View</button>
-                {!readOnly && onEdit ? (
-                  <button type="button" onClick={() => setCardToEdit(card)} className="flex-1 rounded-2xl bg-sky-600 px-2 py-2 text-sm font-semibold text-white transition hover:bg-sky-700" title="Edit">✏️ Edit</button>
-                ) : null}
-                {!readOnly ? (
-                  <button type="button" onClick={() => setCardToDelete(card)} className="flex-1 rounded-2xl bg-rose-600 px-2 py-2 text-sm font-semibold text-white transition hover:bg-rose-700" title="Delete">🗑 Delete</button>
-                ) : null}
-              </div>
-            </article>
-          ))}
-        </div>
+              <span className="text-sm font-medium text-slate-600">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="rounded-2xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-40"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
       ) : (
         <div className="mt-8 rounded-[1.75rem] border border-dashed border-slate-300 bg-slate-50 p-10 text-center">
           <h3 className="text-lg font-semibold text-slate-900">{emptyTitle}</h3>
