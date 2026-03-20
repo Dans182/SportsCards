@@ -267,6 +267,7 @@ function App() {
         onClose={() => setShowProfileSettings(false)}
         profile={profile}
         onProfileUpdate={setProfile}
+        collections={collections}
       />
     </div>
   );

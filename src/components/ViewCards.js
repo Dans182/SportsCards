@@ -11,17 +11,18 @@ function ViewCards({
   onEdit,
   readOnly = false,
   collections = [],
+  initialFilters = {},
   title = 'Your catalog',
   subtitle = 'Search, review and clean up your baseball card inventory.',
   emptyTitle = 'No cards match this filter',
   emptyMessage = 'Try broadening your search or add your first baseball card in the intake panel.'
 }) {
   const [query, setQuery] = useState('');
-  const [sport, setSport] = useState('All');
-  const [debutFilter, setDebutFilter] = useState('All');
+  const [sport, setSport] = useState(initialFilters.sport || 'All');
+  const [debutFilter, setDebutFilter] = useState(initialFilters.debut || 'All');
   // const [gradedOnly, setGradedOnly] = useState(false);
   const [withImagesOnly, setWithImagesOnly] = useState(false);
-  const [sortBy, setSortBy] = useState('updated');
+  const [sortBy, setSortBy] = useState(initialFilters.sortBy || 'updated');
   const [selectedCard, setSelectedCard] = useState(null);
   const [cardToDelete, setCardToDelete] = useState(null);
   const [cardToEdit, setCardToEdit] = useState(null);

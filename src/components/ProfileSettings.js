@@ -4,13 +4,16 @@ import { auth } from '../firebase';
 import { saveUserProfile } from '../services/profileService';
 import { buildPublicProfileUrl, createProfileSlug } from '../utils/publicProfile';
 
-function ProfileSettings({ isOpen, onClose, profile, onProfileUpdate }) {
+function ProfileSettings({ isOpen, onClose, profile, onProfileUpdate, collections = [] }) {
   const [formState, setFormState] = useState({
     name: profile?.name || '',
     email: profile?.email || '',
     publicProfileEnabled: profile?.publicProfileEnabled || false,
     publicSlug: profile?.publicSlug || '',
-    shareDescription: profile?.shareDescription || ''
+    shareDescription: profile?.shareDescription || '',
+    publicCollectionId: profile?.publicCollectionId || 'all',
+    defaultPublicSport: profile?.defaultPublicSport || 'All',
+    defaultPublicSort: profile?.defaultPublicSort || 'updated'
   });
   const [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
@@ -21,7 +24,10 @@ function ProfileSettings({ isOpen, onClose, profile, onProfileUpdate }) {
       email: profile?.email || auth.currentUser?.email || '',
       publicProfileEnabled: profile?.publicProfileEnabled || false,
       publicSlug: profile?.publicSlug || '',
-      shareDescription: profile?.shareDescription || ''
+      shareDescription: profile?.shareDescription || '',
+      publicCollectionId: profile?.publicCollectionId || 'all',
+      defaultPublicSport: profile?.defaultPublicSport || 'All',
+      defaultPublicSort: profile?.defaultPublicSort || 'updated'
     });
   }, [profile]);
 
@@ -151,6 +157,34 @@ function ProfileSettings({ isOpen, onClose, profile, onProfileUpdate }) {
                   className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
                   placeholder="Vintage baseball focus, graded rookies and modern parallels."
                 />
+              </label>
+            </div>
+
+            <div className="mt-4 grid gap-4 sm:grid-cols-3 border-t border-slate-200 pt-5">
+              <label>
+                <span className="mb-2 block text-sm font-medium text-slate-700">Collection to share</span>
+                <select name="publicCollectionId" value={formState.publicCollectionId} onChange={handleChange} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 text-sm">
+                  <option value="all">All collections</option>
+                  {collections.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </label>
+              <label>
+                <span className="mb-2 block text-sm font-medium text-slate-700">Default sport</span>
+                <select name="defaultPublicSport" value={formState.defaultPublicSport} onChange={handleChange} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 text-sm">
+                  {['All', 'Baseball', 'Football', 'Basketball', 'WNBA', 'Hockey', 'Soccer', 'Other'].map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span className="mb-2 block text-sm font-medium text-slate-700">Default sort</span>
+                <select name="defaultPublicSort" value={formState.defaultPublicSort} onChange={handleChange} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 text-sm">
+                  <option value="updated">Recently updated</option>
+                  <option value="year">Newest year</option>
+                  <option value="player">Player A-Z</option>
+                  <option value="debut_asc">Debut: Oldest to newest</option>
+                  <option value="debut_desc">Debut: Newest to oldest</option>
+                </select>
               </label>
             </div>
 

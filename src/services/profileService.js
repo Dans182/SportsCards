@@ -12,6 +12,9 @@ export function normalizeProfile(docId, data = {}) {
     publicProfileEnabled: Boolean(data.publicProfileEnabled),
     publicSlug: data.publicSlug || '',
     shareDescription: data.shareDescription || '',
+    publicCollectionId: data.publicCollectionId || 'all',
+    defaultPublicSport: data.defaultPublicSport || 'All',
+    defaultPublicSort: data.defaultPublicSort || 'updated',
     createdAt: data.createdAt || null,
     updatedAt: data.updatedAt || null
   };
@@ -57,6 +60,9 @@ export async function saveUserProfile(userId, profile) {
     publicProfileEnabled: Boolean(profile.publicProfileEnabled),
     publicSlug: nextSlug,
     shareDescription: profile.shareDescription?.trim() || '',
+    publicCollectionId: profile.publicCollectionId || 'all',
+    defaultPublicSport: profile.defaultPublicSport || 'All',
+    defaultPublicSort: profile.defaultPublicSort || 'updated',
     updatedAt: new Date()
   };
 

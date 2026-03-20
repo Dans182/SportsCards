@@ -59,23 +59,30 @@ function PublicProfilePage({ slug }) {
     };
   }, [slug]);
 
+  const sharedCards = useMemo(() => {
+    if (!profile?.publicCollectionId || profile.publicCollectionId === 'all') {
+      return cards;
+    }
+    return cards.filter(c => c.collectionIds?.includes(profile.publicCollectionId));
+  }, [cards, profile]);
+
   const stats = useMemo(() => {
-    if (!cards.length) {
+    if (!sharedCards.length) {
       return emptyStats;
     }
 
-    const numericYears = cards
+    const numericYears = sharedCards
       .map((card) => Number.parseInt(card.year, 10))
       .filter((year) => Number.isFinite(year));
 
     return {
-      total: cards.length,
-      withImages: cards.filter((card) => Boolean(card.imageUrl)).length,
-      // graded: cards.filter((card) => card.graded === 'Yes').length,
-      baseball: cards.filter((card) => card.sport === 'Baseball').length,
+      total: sharedCards.length,
+      withImages: sharedCards.filter((card) => Boolean(card.imageUrl)).length,
+      // graded: sharedCards.filter((card) => card.graded === 'Yes').length,
+      baseball: sharedCards.filter((card) => card.sport === 'Baseball').length,
       recentYear: numericYears.length ? Math.max(...numericYears).toString() : '—'
     };
-  }, [cards]);
+  }, [sharedCards]);
 
   const statItems = useMemo(() => ([
     { label: 'Total cards', value: stats.total, helper: 'Publicly shared inventory', accent: 'bg-slate-950' },
@@ -109,10 +116,15 @@ function PublicProfilePage({ slug }) {
         </section>
 
         <ViewCards
-          cards={cards}
+          key={profile?.id || 'loading'}
+          cards={sharedCards}
           loading={loading}
           error={error}
           readOnly
+          initialFilters={{
+            sport: profile?.defaultPublicSport,
+            sortBy: profile?.defaultPublicSort
+          }}
           title="Shared inventory"
           subtitle="Filter, search and browse the cards this collector decided to make public."
           emptyTitle="No public cards available"
