@@ -72,6 +72,20 @@ function ViewCards({
           return left.player.localeCompare(right.player);
         }
 
+        if (sortBy === 'debut_asc' || sortBy === 'debut_desc') {
+          const dl = left.debut || '';
+          const dr = right.debut || '';
+          
+          // Push cards without debut to the bottom
+          if (!dl && !dr) return 0;
+          if (!dl) return 1;
+          if (!dr) return -1;
+          
+          // ISO date strings can be compared directly
+          const cmp = dl.localeCompare(dr);
+          return sortBy === 'debut_asc' ? cmp : -cmp;
+        }
+
         const leftTime = left.updatedAt?.seconds || left.createdAt?.seconds || 0;
         const rightTime = right.updatedAt?.seconds || right.createdAt?.seconds || 0;
         return rightTime - leftTime;
@@ -117,6 +131,8 @@ function ViewCards({
           <option value="updated">Recently updated</option>
           <option value="year">Newest year</option>
           <option value="player">Player A-Z</option>
+          <option value="debut_asc">Debut: Oldest to newest</option>
+          <option value="debut_desc">Debut: Newest to oldest</option>
         </select>
         {/* <label className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-600">
           <input type="checkbox" checked={gradedOnly} onChange={(event) => setGradedOnly(event.target.checked)} />
