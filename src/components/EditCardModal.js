@@ -20,6 +20,7 @@ function EditCardModal({ isOpen, card, collections = [], onSave, onClose }) {
         sport: card.sport || 'Baseball',
         set: card.set || '',
         cardNumber: card.cardNumber || '',
+        debut: card.debut || '',
         notes: card.notes || '',
         imageUrl: card.imageUrl || '',
         ocrText: card.ocrText || '',
@@ -173,6 +174,10 @@ function EditCardModal({ isOpen, card, collections = [], onSave, onClose }) {
               <label>
                 <span className="mb-2 block text-sm font-medium text-slate-700">Card number</span>
                 <input name="cardNumber" value={formData.cardNumber} onChange={handleChange} className="field" placeholder="#123" />
+              </label>
+              <label>
+                <span className="mb-2 block text-sm font-medium text-slate-700">Debut date</span>
+                <input type="date" name="debut" value={formData.debut} onChange={handleChange} className="field" />
               </label>
               <label className="sm:col-span-2">
                 <span className="mb-2 block text-sm font-medium text-slate-700">Notes</span>

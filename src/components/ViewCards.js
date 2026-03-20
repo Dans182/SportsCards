@@ -18,6 +18,7 @@ function ViewCards({
 }) {
   const [query, setQuery] = useState('');
   const [sport, setSport] = useState('All');
+  const [debutFilter, setDebutFilter] = useState('All');
   // const [gradedOnly, setGradedOnly] = useState(false);
   const [withImagesOnly, setWithImagesOnly] = useState(false);
   const [sortBy, setSortBy] = useState('updated');
@@ -39,6 +40,11 @@ function ViewCards({
 
         if (sport !== 'All' && card.sport !== sport) {
           return false;
+        }
+
+        if (debutFilter !== 'All') {
+          const cardDebutYear = card.debut ? card.debut.slice(0, 4) : '';
+          if (cardDebutYear !== debutFilter) return false;
         }
 
         // if (gradedOnly && card.graded !== 'Yes') {
@@ -70,7 +76,7 @@ function ViewCards({
         const rightTime = right.updatedAt?.seconds || right.createdAt?.seconds || 0;
         return rightTime - leftTime;
       });
-  }, [cards, query, sortBy, sport, withImagesOnly, activeCollectionId]);
+  }, [cards, query, sortBy, sport, withImagesOnly, activeCollectionId, debutFilter]);
   // }, [cards, gradedOnly, query, sortBy, sport, withImagesOnly, activeCollectionId]);
 
   if (loading) {
@@ -99,6 +105,12 @@ function ViewCards({
         <select value={sport} onChange={(event) => setSport(event.target.value)} className="field">
           {['All', 'Baseball', 'Football', 'Basketball', 'WNBA', 'Hockey', 'Soccer', 'Other'].map((entry) => (
             <option key={entry} value={entry}>{entry}</option>
+          ))}
+        </select>
+        <select value={debutFilter} onChange={(e) => setDebutFilter(e.target.value)} className="field">
+          <option value="All">All debuts</option>
+          {[...new Set(cards.map((c) => c.debut ? c.debut.slice(0, 4) : '').filter(Boolean))].sort().map((yr) => (
+            <option key={yr} value={yr}>{yr}</option>
           ))}
         </select>
         <select value={sortBy} onChange={(event) => setSortBy(event.target.value)} className="field">

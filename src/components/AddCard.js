@@ -14,9 +14,6 @@ const emptyCard = {
   sport: 'Baseball',
   set: '',
   cardNumber: '',
-  // graded: 'No',
-  // gradingCompany: '',
-  // gradeNumber: '',
   debut: '',
   notes: '',
   imageUrl: '',
@@ -228,6 +225,10 @@ function AddCard({ onSave, collections = [], onEnsureCollections }) {
             <label>
               <span className="mb-2 block text-sm font-medium text-slate-700">Card number</span>
               <input name="cardNumber" value={formData.cardNumber} onChange={handleChange} className="field" placeholder="#123" />
+            </label>
+            <label>
+              <span className="mb-2 block text-sm font-medium text-slate-700">Debut date</span>
+              <input type="date" name="debut" value={formData.debut} onChange={handleChange} className="field" />
             </label>
             {/* <label>
               <span className="mb-2 block text-sm font-medium text-slate-700">Graded?</span>
