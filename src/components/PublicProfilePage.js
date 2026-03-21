@@ -109,7 +109,7 @@ function PublicProfilePage({ slug }) {
       </header>
 
       <main className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {statItems.map((item) => (
             <StatCard key={item.label} {...item} />
           ))}

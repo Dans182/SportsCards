@@ -15,6 +15,10 @@ const emptyCard = {
   set: '',
   cardNumber: '',
   debut: '',
+  isParallel: false,
+  isAutograph: false,
+  isRelic: false,
+  numbered: '',
   notes: '',
   imageUrl: '',
   ocrText: '',
@@ -36,10 +40,10 @@ function AddCard({ onSave, collections = [], onEnsureCollections }) {
   const showToast = (message, type = 'success') => setToast({ show: true, message, type });
 
   const handleChange = (event) => {
-    const { name, value } = event.target;
+    const { name, value, type, checked } = event.target;
 
     setFormData((previous) => {
-      const nextState = { ...previous, [name]: value };
+      const nextState = { ...previous, [name]: type === 'checkbox' ? checked : value };
 
       if (name === 'sport') {
         nextState.manufacturer = '';
@@ -230,6 +234,27 @@ function AddCard({ onSave, collections = [], onEnsureCollections }) {
               <span className="mb-2 block text-sm font-medium text-slate-700">Debut date</span>
               <input type="date" name="debut" value={formData.debut} onChange={handleChange} className="field" />
             </label>
+            <div className="sm:col-span-2 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5 space-y-4">
+              <p className="text-sm font-semibold text-slate-900">Attributes</p>
+              <div className="flex flex-wrap gap-6">
+                <label className="flex items-center gap-2 text-sm text-slate-700 font-medium">
+                  <input type="checkbox" name="isParallel" checked={formData.isParallel} onChange={handleChange} className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                  Parallel
+                </label>
+                <label className="flex items-center gap-2 text-sm text-slate-700 font-medium">
+                  <input type="checkbox" name="isAutograph" checked={formData.isAutograph} onChange={handleChange} className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                  Autograph
+                </label>
+                <label className="flex items-center gap-2 text-sm text-slate-700 font-medium">
+                  <input type="checkbox" name="isRelic" checked={formData.isRelic} onChange={handleChange} className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                  Relic
+                </label>
+              </div>
+              <label className="block pt-2">
+                <span className="mb-2 block text-sm font-medium text-slate-700">Numbered (optional)</span>
+                <input name="numbered" value={formData.numbered} onChange={handleChange} className="field w-full sm:w-1/2" placeholder="e.g. 13/25" />
+              </label>
+            </div>
             {/* <label>
               <span className="mb-2 block text-sm font-medium text-slate-700">Graded?</span>
               <select name="graded" value={formData.graded} onChange={handleChange} className="field">

@@ -19,6 +19,10 @@ const normalizeCardPayload = (card, userId) => ({
   gradeNumber: card.gradeNumber?.toString().trim() || '',
   notes: card.notes?.trim() || '',
   debut: card.debut?.toString().trim() || '',
+  isParallel: Boolean(card.isParallel),
+  isAutograph: Boolean(card.isAutograph),
+  isRelic: Boolean(card.isRelic),
+  numbered: card.numbered?.trim() || '',
   imageUrl: card.imageUrl || '',
   ocrText: card.ocrText?.trim() || '',
   // many-to-many: array of collection IDs this card belongs to

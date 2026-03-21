@@ -22,6 +22,9 @@ function ViewCards({
   const [debutFilter, setDebutFilter] = useState(initialFilters.debut || 'All');
   // const [gradedOnly, setGradedOnly] = useState(false);
   const [withImagesOnly, setWithImagesOnly] = useState(false);
+  const [parallelOnly, setParallelOnly] = useState(false);
+  const [autographOnly, setAutographOnly] = useState(false);
+  const [relicOnly, setRelicOnly] = useState(false);
   const [sortBy, setSortBy] = useState(initialFilters.sortBy || 'updated');
   const [selectedCard, setSelectedCard] = useState(null);
   const [cardToDelete, setCardToDelete] = useState(null);
@@ -32,7 +35,7 @@ function ViewCards({
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [query, sport, debutFilter, withImagesOnly, sortBy, activeCollectionId]);
+  }, [query, sport, debutFilter, withImagesOnly, parallelOnly, autographOnly, relicOnly, sortBy, activeCollectionId]);
 
   const filteredCards = useMemo(() => {
     const search = query.trim().toLowerCase();
@@ -58,9 +61,10 @@ function ViewCards({
         //   return false;
         // }
 
-        if (withImagesOnly && !card.imageUrl) {
-          return false;
-        }
+        if (withImagesOnly && !card.imageUrl) return false;
+        if (parallelOnly && !card.isParallel) return false;
+        if (autographOnly && !card.isAutograph) return false;
+        if (relicOnly && !card.isRelic) return false;
 
         if (!search) {
           return true;
@@ -97,7 +101,7 @@ function ViewCards({
         const rightTime = right.updatedAt?.seconds || right.createdAt?.seconds || 0;
         return rightTime - leftTime;
       });
-  }, [cards, query, sortBy, sport, withImagesOnly, activeCollectionId, debutFilter]);
+  }, [cards, query, sortBy, sport, withImagesOnly, parallelOnly, autographOnly, relicOnly, activeCollectionId, debutFilter]);
 
   const totalPages = Math.ceil(filteredCards.length / 12);
   const paginatedCards = useMemo(() => {
@@ -126,7 +130,7 @@ function ViewCards({
         </div>
       </div>
 
-      <div className="mt-8 grid gap-4 lg:grid-cols-[1.8fr_repeat(4,minmax(0,1fr))]">
+      <div className="mt-8 grid gap-4 lg:grid-cols-[1.8fr_repeat(3,minmax(0,1fr))]">
         <input value={query} onChange={(event) => setQuery(event.target.value)} className="field" placeholder="Search player, set, notes or card number" />
         <select value={sport} onChange={(event) => setSport(event.target.value)} className="field">
           {['All', 'Baseball', 'Football', 'Basketball', 'WNBA', 'Hockey', 'Soccer', 'Other'].map((entry) => (
@@ -146,13 +150,24 @@ function ViewCards({
           <option value="debut_asc">Debut: Oldest to newest</option>
           <option value="debut_desc">Debut: Newest to oldest</option>
         </select>
-        {/* <label className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-600">
-          <input type="checkbox" checked={gradedOnly} onChange={(event) => setGradedOnly(event.target.checked)} />
-          Graded only
-        </label> */}
-        <label className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-600">
-          <input type="checkbox" checked={withImagesOnly} onChange={(event) => setWithImagesOnly(event.target.checked)} />
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-3">
+        <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 cursor-pointer">
+          <input type="checkbox" checked={withImagesOnly} onChange={(event) => setWithImagesOnly(event.target.checked)} className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
           Images only
+        </label>
+        <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 cursor-pointer">
+          <input type="checkbox" checked={parallelOnly} onChange={(event) => setParallelOnly(event.target.checked)} className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+          Parallel
+        </label>
+        <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 cursor-pointer">
+          <input type="checkbox" checked={autographOnly} onChange={(event) => setAutographOnly(event.target.checked)} className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+          Auto
+        </label>
+        <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 cursor-pointer">
+          <input type="checkbox" checked={relicOnly} onChange={(event) => setRelicOnly(event.target.checked)} className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+          Relic
         </label>
       </div>
 
@@ -208,6 +223,10 @@ function ViewCards({
                     <div className="flex flex-wrap gap-2 text-xs font-medium text-slate-600">
                       {card.set ? <span className="rounded-full bg-white px-3 py-1">{card.set}</span> : null}
                       {card.cardNumber ? <span className="rounded-full bg-white px-3 py-1">#{card.cardNumber}</span> : null}
+                      {card.numbered ? <span className="rounded-full bg-white px-3 py-1">{card.numbered}</span> : null}
+                      {card.isParallel ? <span className="rounded-full bg-indigo-100 text-indigo-700 font-semibold px-3 py-1">Parallel</span> : null}
+                      {card.isAutograph ? <span className="rounded-full bg-amber-100 text-amber-700 font-semibold px-3 py-1">Auto</span> : null}
+                      {card.isRelic ? <span className="rounded-full bg-orange-100 text-orange-700 font-semibold px-3 py-1">Relic</span> : null}
                     </div>
                     {card.notes ? <p className="line-clamp-2 text-sm text-slate-500">{card.notes}</p> : null}
                   </div>

@@ -152,56 +152,10 @@ function App() {
             </button>
           </div>
         </div>
-
-        {/* Collection tab bar */}
-        {!collectionsLoading && collections.length > 0 && (
-          <div className="mx-auto max-w-7xl px-4 pb-0 sm:px-6 lg:px-8">
-            <div className="flex gap-1 overflow-x-auto pb-0 scrollbar-hide">
-              {/* "All" tab */}
-              <button
-                type="button"
-                onClick={() => setActiveCollectionId(null)}
-                className={`whitespace-nowrap rounded-t-2xl border-b-2 px-5 py-3 text-sm font-semibold transition
-                  ${!activeCollectionId
-                    ? 'border-sky-600 bg-sky-50 text-sky-700'
-                    : 'border-transparent bg-white text-slate-500 hover:text-slate-700'
-                  }`}
-              >
-                Todas las cartas
-                <span className="ml-2 rounded-full bg-slate-200 px-2 py-0.5 text-xs text-slate-600">
-                  {cards.length}
-                </span>
-              </button>
-
-              {collections.map((col) => {
-                const count = cards.filter(
-                  (c) => Array.isArray(c.collectionIds) && c.collectionIds.includes(col.id)
-                ).length;
-                return (
-                  <button
-                    key={col.id}
-                    type="button"
-                    onClick={() => setActiveCollectionId(col.id)}
-                    className={`whitespace-nowrap rounded-t-2xl border-b-2 px-5 py-3 text-sm font-semibold transition
-                      ${activeCollectionId === col.id
-                        ? 'border-sky-600 bg-sky-50 text-sky-700'
-                        : 'border-transparent bg-white text-slate-500 hover:text-slate-700'
-                      }`}
-                  >
-                    {col.name}
-                    <span className="ml-2 rounded-full bg-slate-200 px-2 py-0.5 text-xs text-slate-600">
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </header>
 
       <main className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {statItems.map((item) => (
             <StatCard key={item.label} {...item} />
           ))}

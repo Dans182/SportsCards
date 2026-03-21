@@ -35,8 +35,11 @@ function CardDetailModal({ isOpen, onClose, card }) {
               ['Set', card.set || '—'],
               ['Card number', card.cardNumber || '—'],
               ['Debut date', card.debut ? new Date(card.debut + 'T00:00:00').toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }) : '—'],
-              // ['Graded', card.graded === 'Yes' ? ...]
-            ].map(([label, value]) => (
+              card.numbered ? ['Numbered', card.numbered] : null,
+              card.isParallel ? ['Parallel', 'Yes'] : null,
+              card.isAutograph ? ['Autograph', 'Yes'] : null,
+              card.isRelic ? ['Relic', 'Yes'] : null,
+            ].filter(Boolean).map(([label, value]) => (
               <div key={label} className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
                 <dt className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{label}</dt>
                 <dd className="mt-2 text-sm font-medium text-slate-900">{value}</dd>

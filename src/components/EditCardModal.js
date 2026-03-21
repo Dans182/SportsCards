@@ -21,6 +21,10 @@ function EditCardModal({ isOpen, card, collections = [], onSave, onClose }) {
         set: card.set || '',
         cardNumber: card.cardNumber || '',
         debut: card.debut || '',
+        isParallel: Boolean(card.isParallel),
+        isAutograph: Boolean(card.isAutograph),
+        isRelic: Boolean(card.isRelic),
+        numbered: card.numbered || '',
         notes: card.notes || '',
         imageUrl: card.imageUrl || '',
         ocrText: card.ocrText || '',
@@ -38,9 +42,9 @@ function EditCardModal({ isOpen, card, collections = [], onSave, onClose }) {
   if (!isOpen || !card || !formData) return null;
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData((prev) => {
-      const next = { ...prev, [name]: value };
+      const next = { ...prev, [name]: type === 'checkbox' ? checked : value };
       if (name === 'sport') { next.manufacturer = ''; next.set = ''; }
       if (name === 'manufacturer') { next.set = ''; }
       return next;
@@ -179,6 +183,27 @@ function EditCardModal({ isOpen, card, collections = [], onSave, onClose }) {
                 <span className="mb-2 block text-sm font-medium text-slate-700">Debut date</span>
                 <input type="date" name="debut" value={formData.debut} onChange={handleChange} className="field" />
               </label>
+              <div className="sm:col-span-2 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5 space-y-4">
+                <p className="text-sm font-semibold text-slate-900">Attributes</p>
+                <div className="flex flex-wrap gap-6">
+                  <label className="flex items-center gap-2 text-sm text-slate-700 font-medium">
+                    <input type="checkbox" name="isParallel" checked={formData.isParallel} onChange={handleChange} className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                    Parallel
+                  </label>
+                  <label className="flex items-center gap-2 text-sm text-slate-700 font-medium">
+                    <input type="checkbox" name="isAutograph" checked={formData.isAutograph} onChange={handleChange} className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                    Autograph
+                  </label>
+                  <label className="flex items-center gap-2 text-sm text-slate-700 font-medium">
+                    <input type="checkbox" name="isRelic" checked={formData.isRelic} onChange={handleChange} className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                    Relic
+                  </label>
+                </div>
+                <label className="block pt-2">
+                  <span className="mb-2 block text-sm font-medium text-slate-700">Numbered (optional)</span>
+                  <input name="numbered" value={formData.numbered} onChange={handleChange} className="field w-full sm:w-1/2" placeholder="e.g. 13/25" />
+                </label>
+              </div>
               <label className="sm:col-span-2">
                 <span className="mb-2 block text-sm font-medium text-slate-700">Notes</span>
                 <textarea name="notes" value={formData.notes} onChange={handleChange} rows="4" className="field min-h-[120px]" placeholder="Condition, purchase info, etc." />
