@@ -1,13 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 /**
  * Lets the user pick one or more collections for a new card.
  * If only one collection exists it is pre-selected and the picker is hidden.
  */
 function CollectionPicker({ collections, selectedIds, onChange }) {
-  const [creating, setCreating] = useState(false);
-  const [newName, setNewName] = useState('');
-
   const toggle = (id) => {
     if (selectedIds.includes(id)) {
       onChange(selectedIds.filter((x) => x !== id));

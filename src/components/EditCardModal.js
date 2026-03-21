@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { getManufacturersForSport } from '../data/manufacturers';
 import { getSetsForManufacturer } from '../data/sets';
-import { prepareImageAsset } from '../utils/imageProcessing';
 import Toast from './Toast';
 
 function EditCardModal({ isOpen, card, collections = [], onSave, onClose }) {

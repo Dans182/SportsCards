@@ -4,6 +4,7 @@ import AddCard from './components/AddCard';
 import Login from './components/Login';
 import ProfileSettings from './components/ProfileSettings';
 import PublicProfilePage from './components/PublicProfilePage';
+import ImportCardsModal from './components/ImportCardsModal';
 import ViewCards from './components/ViewCards';
 import StatCard from './components/ui/StatCard';
 import CollectionsManager from './components/CollectionsManager';
@@ -20,7 +21,7 @@ function App() {
   const [booting, setBooting] = useState(true);
   const [showProfileSettings, setShowProfileSettings] = useState(false);
   const [showCollectionsManager, setShowCollectionsManager] = useState(false);
-  const [activeCollectionId, setActiveCollectionId] = useState(null); // null = "All"
+  const [showImportCardsModal, setShowImportCardsModal] = useState(false);
 
   const publicProfileSlug = useMemo(() => getPublicProfileSlugFromPath(window.location.pathname), []);
 
@@ -36,7 +37,6 @@ function App() {
 
   const {
     collections,
-    loading: collectionsLoading,
     addCollection,
     editCollection,
     removeCollection,
@@ -85,14 +85,6 @@ function App() {
     return () => unsubscribe();
   }, [publicProfileSlug]);
 
-  // Cards filtered by active collection tab
-  const visibleCards = useMemo(() => {
-    if (!activeCollectionId) return cards;
-    return cards.filter((c) =>
-      Array.isArray(c.collectionIds) && c.collectionIds.includes(activeCollectionId)
-    );
-  }, [cards, activeCollectionId]);
-
   const statItems = useMemo(() => ([
     { label: 'Total cards', value: stats.total, helper: 'Entire collection', accent: 'bg-slate-950' },
     { label: 'Baseball', value: stats.baseball, helper: 'Cards tagged as baseball', accent: 'bg-sky-600' },
@@ -119,10 +111,6 @@ function App() {
   if (!user) {
     return <Login />;
   }
-
-  // Active collection label for ViewCards subtitle
-  const activeCollection = collections.find((c) => c.id === activeCollectionId);
-
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
       <header className="border-b border-slate-200 bg-white/80 backdrop-blur">
@@ -136,6 +124,13 @@ function App() {
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => setShowImportCardsModal(true)}
+              className="inline-flex items-center justify-center rounded-2xl border border-sky-200 bg-sky-50 px-5 py-3 text-sm font-semibold text-sky-700 transition hover:border-sky-300 hover:bg-sky-100"
+            >
+              Import CSV
+            </button>
             <button
               type="button"
               onClick={() => setShowCollectionsManager(true)}
@@ -175,12 +170,9 @@ function App() {
           onDelete={deleteCard}
           onEdit={updateCard}
           collections={collections}
-          title={activeCollection ? activeCollection.name : 'Tu catálogo completo'}
-          subtitle={
-            activeCollection
-              ? activeCollection.description || `Cartas en "${activeCollection.name}".`
-              : 'Search, review and clean up your baseball card inventory.'
-          } emptyTitle="No public cards available"
+          title={'Tu catálogo completo'}
+          subtitle={'Search, review and clean up your baseball card inventory.'}
+          emptyTitle="No public cards available"
         />
       </main>
 
@@ -221,6 +213,13 @@ function App() {
         onClose={() => setShowProfileSettings(false)}
         profile={profile}
         onProfileUpdate={setProfile}
+        collections={collections}
+      />
+
+      <ImportCardsModal
+        isOpen={showImportCardsModal}
+        onClose={() => setShowImportCardsModal(false)}
+        onSave={addCard}
         collections={collections}
       />
     </div>
