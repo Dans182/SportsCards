@@ -7,34 +7,37 @@ export const setsByManufacturer = {
       'Topps Series 2',
       'Topps Update',
       'Topps Chrome',
+      'Topps Chrome Update Series',
       'Topps Finest',
       'Topps Heritage',
       'Topps Stadium Club',
       'Topps Allen & Ginter',
-      'Topps Gypsy Queen',
-      'Topps Opening Day',
-      'Topps Big League',
-      'Topps Pro Debut',
       'Topps Archives',
-      'Topps Fire',
-      'Topps Gallery',
-      'Topps Inception',
-      'Topps Luminaries',
-      'Topps Museum Collection',
-      'Topps Definitive',
-      'Topps Transcendent',
-      'Topps Dynasty',
-      'Topps Tribute',
-      'Topps Triple Threads',
-      'Topps Tier One',
-      'Topps Sterling',
-      'Topps Marquee',
-      'Topps Supreme',
-      'Topps Tek',
-      'Topps Total',
-      'Topps Traded',
-      'Topps Debut',
-      'Topps Rookie Cup',
+      'Topps Cosmic Chrome',
+      'Topps Bowman Draft',
+      // 'Topps Gypsy Queen',
+      // 'Topps Opening Day',
+      // 'Topps Big League',
+      // 'Topps Pro Debut',
+      // 'Topps Fire',
+      // 'Topps Gallery',
+      // 'Topps Inception',
+      // 'Topps Luminaries',
+      // 'Topps Museum Collection',
+      // 'Topps Definitive',
+      // 'Topps Transcendent',
+      // 'Topps Dynasty',
+      // 'Topps Tribute',
+      // 'Topps Triple Threads',
+      // 'Topps Tier One',
+      // 'Topps Sterling',
+      // 'Topps Marquee',
+      // 'Topps Supreme',
+      // 'Topps Tek',
+      // 'Topps Total',
+      // 'Topps Traded',
+      // 'Topps Debut',
+      // 'Topps Rookie Cup',
       'Topps Now',
       'Topps Project 2020',
       'Topps Project 70',
@@ -181,33 +184,33 @@ export const setsByManufacturer = {
       'Other'
     ]
   },
-  
-  Bowman: {
-    Baseball: [
-      'Bowman',
-      'Bowman Chrome',
-      'Bowman Draft',
-      'Bowman Sterling',
-      'Bowman Platinum',
-      'Bowman Best',
-      'Bowman Heritage',
-      'Bowman Prospects',
-      'Bowman Rookie',
-      'Bowman 1st Edition',
-      'Bowman Inception',
-      'Bowman Transcendent',
-      'Bowman Dynasty',
-      'Bowman Tribute',
-      'Bowman Triple Threads',
-      'Bowman Tier One',
-      'Bowman Marquee',
-      'Bowman Supreme',
-      'Bowman Tek',
-      'Bowman Total',
-      'Other'
-    ]
-  },
-  
+
+  // Bowman: {
+  //   Baseball: [
+  //     'Bowman',
+  //     'Bowman Chrome',
+  //     'Bowman Draft',
+  //     'Bowman Sterling',
+  //     'Bowman Platinum',
+  //     'Bowman Best',
+  //     'Bowman Heritage',
+  //     'Bowman Prospects',
+  //     'Bowman Rookie',
+  //     'Bowman 1st Edition',
+  //     'Bowman Inception',
+  //     'Bowman Transcendent',
+  //     'Bowman Dynasty',
+  //     'Bowman Tribute',
+  //     'Bowman Triple Threads',
+  //     'Bowman Tier One',
+  //     'Bowman Marquee',
+  //     'Bowman Supreme',
+  //     'Bowman Tek',
+  //     'Bowman Total',
+  //     'Other'
+  //   ]
+  // },
+
   Panini: {
     Football: [
       'Panini',
@@ -372,7 +375,7 @@ export const setsByManufacturer = {
       'Other'
     ]
   },
-  
+
   Upper_Deck: {
     Baseball: [
       'Upper Deck',
@@ -543,7 +546,7 @@ export const setsByManufacturer = {
       'Other'
     ]
   },
-  
+
   Donruss: {
     Football: [
       'Donruss',
@@ -792,26 +795,26 @@ export const setsByManufacturer = {
 export const getSetsForManufacturer = (manufacturer, sport) => {
   // Handle special cases where manufacturer names might have spaces
   let manufacturerKey;
-  
+
   if (manufacturer === 'Upper Deck') {
     manufacturerKey = 'Upper_Deck';
   } else {
     manufacturerKey = manufacturer;
   }
-  
+
   const manufacturerSets = setsByManufacturer[manufacturerKey];
-  
+
   if (!manufacturerSets) {
     return ['Base', 'Other'];
   }
-  
+
   const sets = manufacturerSets[sport] || manufacturerSets['Baseball'] || ['Other'];
-  
+
   // If the only option is 'Other', add 'Base' as well
   if (sets.length === 1 && sets[0] === 'Other') {
     return ['Base', 'Other'];
   }
-  
+
   return sets;
 };
 
