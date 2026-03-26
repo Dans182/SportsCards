@@ -2,7 +2,7 @@
 export const manufacturersBySport = {
   Baseball: [
     'Topps',
-    'Bowman',
+    // 'Bowman',
     'Donruss',
     'Fleer',
     'Upper Deck',
@@ -13,7 +13,7 @@ export const manufacturersBySport = {
     'O-Pee-Chee',
     'Other'
   ],
-  
+
   Football: [
     'Topps',
     'Panini',
@@ -26,7 +26,7 @@ export const manufacturersBySport = {
     'Leaf',
     'Other'
   ],
-  
+
   Basketball: [
     'Topps',
     'Panini',
@@ -36,7 +36,7 @@ export const manufacturersBySport = {
     'Hoops',
     'Other'
   ],
-  
+
   WNBA: [
     'Topps',
     'Panini',
@@ -46,7 +46,7 @@ export const manufacturersBySport = {
     'Hoops',
     'Other'
   ],
-  
+
   Hockey: [
     'Upper Deck',
     'Topps',
@@ -58,7 +58,7 @@ export const manufacturersBySport = {
     'Pinnacle',
     'Other'
   ],
-  
+
   Soccer: [
     'Panini',
     'Topps',
@@ -69,7 +69,7 @@ export const manufacturersBySport = {
     'Pinnacle',
     'Other'
   ],
-  
+
   Other: [
     'Topps',
     'Panini',
