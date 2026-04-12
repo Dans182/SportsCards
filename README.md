@@ -2,6 +2,7 @@
 
 Aplicación web para registrar y consultar cartas deportivas, con foco en colecciones personales de béisbol.
 
+## Qué incluye actualmente
 
 - **Arquitectura refactorizada:** la capa de acceso a datos está separada en `src/services/cardService.js` y `src/services/profileService.js`, mientras que el estado de la colección vive en `src/hooks/useCards.js`.
 - **Persistencia en Firebase:** el proyecto usa **Firebase Firestore** como base de datos, por lo que no fue necesario introducir SQLite.
