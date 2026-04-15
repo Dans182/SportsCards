@@ -22,6 +22,12 @@ const normalizeCardPayload = (card, userId) => ({
   isParallel: Boolean(card.isParallel),
   isAutograph: Boolean(card.isAutograph),
   isRelic: Boolean(card.isRelic),
+  // Rookie / 1st Bowman (mutuamente excluyentes por lógica de UI)
+  isRookieCard: Boolean(card.isRookieCard),
+  is1stBowman: Boolean(card.is1stBowman),
+  // Insert
+  isInsert: Boolean(card.isInsert),
+  insertSet: card.insertSet?.trim() || '',
   numbered: card.numbered?.trim() || '',
   imageUrl: card.imageUrl || '',
   ocrText: card.ocrText?.trim() || '',

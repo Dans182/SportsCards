@@ -21,15 +21,21 @@ function ImportCardsModal({ isOpen, onClose, onSave, collections = [] }) {
   const downloadTemplate = () => {
     const headers = [
       'player', 'year', 'manufacturer', 'sport', 'set', 'cardNumber',
-      'numbered', 'isParallel', 'isAutograph', 'isRelic', 'debut', 'notes', 'image_filename'
+      'numbered', 'isParallel', 'isAutograph', 'isRelic',
+      'isRookieCard', 'is1stBowman', 'isInsert', 'insertSet',
+      'debut', 'notes', 'image_filename'
     ];
     const example1 = [
       'Shohei Ohtani', '2024', 'Topps', 'Baseball', 'Series 1', '1',
-      '10/50', 'TRUE', 'FALSE', 'FALSE', '2018-03-29', 'Mint condition', 'ohtani_front.jpg'
+      '10/50', 'TRUE', 'FALSE', 'FALSE',
+      'TRUE', 'FALSE', 'FALSE', '',
+      '2018-03-29', 'Mint condition', 'ohtani_front.jpg'
     ];
     const example2 = [
-      'Lionel Messi', '2022', 'Panini', 'Soccer', 'Prizm', '10',
-      '', 'FALSE', 'FALSE', 'FALSE', '', 'World Cup Edition', ''
+      'Jackson Holliday', '2021', 'Bowman', 'Baseball', 'Bowman Chrome', '78',
+      '', 'FALSE', 'FALSE', 'FALSE',
+      'FALSE', 'TRUE', 'TRUE', 'Refractor',
+      '', '', ''
     ];
 
     const csvContent = [
@@ -68,12 +74,20 @@ function ImportCardsModal({ isOpen, onClose, onSave, collections = [] }) {
 
         let successCount = 0;
         let errorCount = 0;
+        const currentYear = new Date().getFullYear();
 
         for (let i = 0; i < rows.length; i++) {
           const row = rows[i];
           setProgress(i + 1);
 
           try {
+            // Validar año antes de crear el payload
+            const parsedYear = parseInt(row.year, 10);
+            if (!Number.isFinite(parsedYear) || parsedYear > currentYear || parsedYear < 1860) {
+              console.warn(`Fila ${i + 1}: año inválido "${row.year}" (debe estar entre 1860 y ${currentYear}).`);
+              errorCount++;
+              continue;
+            }
             // Build the card payload. Defaults to safe fallback if missing.
             const cardData = {
               player: row.player?.trim() || 'Unknown Player',
@@ -86,6 +100,10 @@ function ImportCardsModal({ isOpen, onClose, onSave, collections = [] }) {
               isParallel: String(row.isParallel).toLowerCase() === 'true',
               isAutograph: String(row.isAutograph).toLowerCase() === 'true',
               isRelic: String(row.isRelic).toLowerCase() === 'true',
+              isRookieCard: String(row.isRookieCard).toLowerCase() === 'true',
+              is1stBowman: String(row.is1stBowman).toLowerCase() === 'true',
+              isInsert: String(row.isInsert).toLowerCase() === 'true',
+              insertSet: row.insertSet?.trim() || '',
               debut: row.debut?.trim() || '',
               notes: row.notes?.trim() || '',
               collectionIds: [collectionId],

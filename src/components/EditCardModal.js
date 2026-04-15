@@ -23,6 +23,10 @@ function EditCardModal({ isOpen, card, collections = [], onSave, onClose }) {
         isParallel: Boolean(card.isParallel),
         isAutograph: Boolean(card.isAutograph),
         isRelic: Boolean(card.isRelic),
+        isRookieCard: Boolean(card.isRookieCard),
+        is1stBowman: Boolean(card.is1stBowman),
+        isInsert: Boolean(card.isInsert),
+        insertSet: card.insertSet || '',
         numbered: card.numbered || '',
         notes: card.notes || '',
         imageUrl: card.imageUrl || '',
@@ -77,8 +81,21 @@ function EditCardModal({ isOpen, card, collections = [], onSave, onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const currentYear = new Date().getFullYear();
+    const parsedYear = parseInt(formData.year, 10);
+
     if (!formData.player.trim() || !formData.year.trim() || !formData.manufacturer.trim()) {
       showToast('Player, year and manufacturer are required.', 'warning');
+      return;
+    }
+
+    if (!Number.isFinite(parsedYear) || parsedYear > currentYear) {
+      showToast(`El año no puede ser superior a ${currentYear}.`, 'warning');
+      return;
+    }
+
+    if (parsedYear < 1860) {
+      showToast('El año no puede ser anterior a 1860.', 'warning');
       return;
     }
     try {
@@ -158,7 +175,17 @@ function EditCardModal({ isOpen, card, collections = [], onSave, onClose }) {
               </label>
               <label>
                 <span className="mb-2 block text-sm font-medium text-slate-700">Year *</span>
-                <input name="year" value={formData.year} onChange={handleChange} className="field" placeholder="2024" required />
+                <input
+                  type="number"
+                  name="year"
+                  value={formData.year}
+                  onChange={handleChange}
+                  className="field"
+                  placeholder="2024"
+                  min="1860"
+                  max={new Date().getFullYear()}
+                  required
+                />
               </label>
               <label>
                 <span className="mb-2 block text-sm font-medium text-slate-700">Manufacturer *</span>
@@ -197,6 +224,34 @@ function EditCardModal({ isOpen, card, collections = [], onSave, onClose }) {
                     <input type="checkbox" name="isRelic" checked={formData.isRelic} onChange={handleChange} className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
                     Relic
                   </label>
+                  {/* Rookie Card / 1st Bowman — etiqueta dinámica según el set */}
+                  {formData.set?.toLowerCase().includes('bowman') ? (
+                    <label className="flex items-center gap-2 text-sm text-slate-700 font-medium">
+                      <input type="checkbox" name="is1stBowman" checked={formData.is1stBowman} onChange={handleChange} className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                      1st Bowman
+                    </label>
+                  ) : (
+                    <label className="flex items-center gap-2 text-sm text-slate-700 font-medium">
+                      <input type="checkbox" name="isRookieCard" checked={formData.isRookieCard} onChange={handleChange} className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                      Rookie Card
+                    </label>
+                  )}
+                </div>
+                {/* Insert */}
+                <div className="space-y-3 pt-1">
+                  <label className="flex items-center gap-2 text-sm text-slate-700 font-medium">
+                    <input type="checkbox" name="isInsert" checked={formData.isInsert} onChange={handleChange} className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                    Insert
+                  </label>
+                  {formData.isInsert && (
+                    <input
+                      name="insertSet"
+                      value={formData.insertSet}
+                      onChange={handleChange}
+                      className="field w-full sm:w-2/3"
+                      placeholder="Insert set name (e.g. Chrome, Gold Label…)"
+                    />
+                  )}
                 </div>
                 <label className="block pt-2">
                   <span className="mb-2 block text-sm font-medium text-slate-700">Numbered (optional)</span>
