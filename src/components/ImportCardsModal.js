@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Papa from 'papaparse';
+import { validateCardYear } from '../utils/cardValidation';
 import Toast from './Toast';
 import { prepareImageAsset } from '../utils/imageProcessing';
 
@@ -74,17 +75,15 @@ function ImportCardsModal({ isOpen, onClose, onSave, collections = [] }) {
 
         let successCount = 0;
         let errorCount = 0;
-        const currentYear = new Date().getFullYear();
 
         for (let i = 0; i < rows.length; i++) {
           const row = rows[i];
           setProgress(i + 1);
 
           try {
-            // Validar año antes de crear el payload
-            const parsedYear = parseInt(row.year, 10);
-            if (!Number.isFinite(parsedYear) || parsedYear > currentYear || parsedYear < 1860) {
-              console.warn(`Fila ${i + 1}: año inválido "${row.year}" (debe estar entre 1860 y ${currentYear}).`);
+            const yearError = validateCardYear(row.year);
+            if (yearError) {
+              console.warn(`Fila ${i + 1}: ${yearError}`);
               errorCount++;
               continue;
             }

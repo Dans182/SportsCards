@@ -4,6 +4,7 @@ import { getSetsForManufacturer } from '../data/sets';
 import { prepareImageAsset } from '../utils/imageProcessing';
 import { parseCardText } from '../utils/cardTextParser';
 import { recognizeCardText } from '../utils/ocr';
+import { validateCardForm } from '../utils/cardValidation';
 import CollectionPicker from './CollectionPicker';
 import Toast from './Toast';
 
@@ -108,21 +109,9 @@ function AddCard({ onSave, collections = [], onEnsureCollections }) {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const currentYear = new Date().getFullYear();
-    const parsedYear = parseInt(formData.year, 10);
-
-    if (!formData.player.trim() || !formData.year.trim() || !formData.manufacturer.trim()) {
-      showToast('Player, year and manufacturer are required.', 'warning');
-      return;
-    }
-
-    if (!Number.isFinite(parsedYear) || parsedYear > currentYear) {
-      showToast(`El año no puede ser superior a ${currentYear}.`, 'warning');
-      return;
-    }
-
-    if (parsedYear < 1860) {
-      showToast('El año no puede ser anterior a 1860.', 'warning');
+    const formError = validateCardForm(formData);
+    if (formError) {
+      showToast(formError, 'warning');
       return;
     }
 

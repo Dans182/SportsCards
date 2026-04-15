@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { getManufacturersForSport } from '../data/manufacturers';
 import { getSetsForManufacturer } from '../data/sets';
+import { validateCardForm } from '../utils/cardValidation';
 import Toast from './Toast';
 
 function EditCardModal({ isOpen, card, collections = [], onSave, onClose }) {
@@ -81,21 +82,9 @@ function EditCardModal({ isOpen, card, collections = [], onSave, onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const currentYear = new Date().getFullYear();
-    const parsedYear = parseInt(formData.year, 10);
-
-    if (!formData.player.trim() || !formData.year.trim() || !formData.manufacturer.trim()) {
-      showToast('Player, year and manufacturer are required.', 'warning');
-      return;
-    }
-
-    if (!Number.isFinite(parsedYear) || parsedYear > currentYear) {
-      showToast(`El año no puede ser superior a ${currentYear}.`, 'warning');
-      return;
-    }
-
-    if (parsedYear < 1860) {
-      showToast('El año no puede ser anterior a 1860.', 'warning');
+    const formError = validateCardForm(formData);
+    if (formError) {
+      showToast(formError, 'warning');
       return;
     }
     try {

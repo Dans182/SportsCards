@@ -7,7 +7,7 @@ const getCardTimestamp = (card) => card.updatedAt?.seconds || card.createdAt?.se
 
 const sortCardsByRecentUpdate = (cards) => cards.sort((a, b) => getCardTimestamp(b) - getCardTimestamp(a));
 
-const normalizeCardPayload = (card, userId) => ({
+export const normalizeCardPayload = (card, userId) => ({
   player: card.player?.trim() || '',
   year: card.year?.toString().trim() || '',
   manufacturer: card.manufacturer?.trim() || '',
